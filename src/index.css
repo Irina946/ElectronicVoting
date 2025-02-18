@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -5,10 +6,43 @@
   --color-white: #FFFFFF;
   --color-black: #000000;
   --color-yellow: #F2B649;
+  --color-yellow-button: #FBCB18;
   --color-gray: #F1F1F1;
   --color-background: #EFEFEF;
   --color-icon: #CECECE;
   --color-icon-two: #D9D9D9;
   --color-button: #DCDCDC;
   --color-button-two: #BDBDBD;
+  --color-footer: #F6F6F6;
+  --color-placeholder: #C4C4C4;
+  --color-text: #333333;
+  --color-border: #727272;
+  --color-yellow-hover: #FFEBC8;
+  --color-calendar-prew: #8C8A88;
+  --color-button-active: #EBEBEB;
+  --color-green: #16B830;
+
+  --font-display: "PT Sans", sans-serif;
 }
+
+* {
+  font-family: var(--font-display);
+}
+
+::-webkit-scrollbar {
+  @apply w-[1px];
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-none;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-none;
+}
+
+

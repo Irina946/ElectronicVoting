@@ -1,0 +1,29 @@
+.buttonEmpty {
+    @apply 
+        bg-(--color-white) 
+        border-4 
+        border-(--color-yellow-button) 
+        hover:bg-(--color-yellow-button) 
+        focus:bg-(--color-yellow-button) 
+        active:bg-(--color-white)
+}
+
+.buttonYellow {
+    @apply 
+    bg-(--color-yellow-button) 
+    border-[1px] 
+    border-(--color-border) 
+    hover:bg-(--color-yellow) 
+    focus:bg-(--color-yellow) 
+    active:bg-(--color-yellow-button)
+}
+
+.buttonEmptyMessage {
+    @apply 
+        bg-(--color-white) 
+        hover:bg-(--color-yellow-button) 
+        focus:bg-(--color-yellow-button) 
+        active:bg-(--color-button-active)
+        disabled:bg-(--color-button-active)
+        disabled:cursor-auto
+}
