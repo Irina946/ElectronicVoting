@@ -219,11 +219,12 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
                     className="absolute 
                             bottom-full 
                             left-[100px] 
-                            z-10 
+                            z-15 
                             bg-white 
                             border-[0.5px] 
                             border-(--color-border) 
                             rounded-[16px] 
+                            w-[244px]
                             ">
                     <div className="flex items-center justify-between p-[14px] ">
                         <span className="text-(--color-text) text-sm font-bold capitalize">

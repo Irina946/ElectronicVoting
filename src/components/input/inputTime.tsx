@@ -3,9 +3,10 @@ import React, { JSX } from "react";
 interface InputTimeProps {
     initialHours?: number;
     initialMinutes?: number;
+    onTimeChange: (hours: number, minutes: number) => void;
 }
 
-export const InputTime: React.FC<InputTimeProps> = ({ initialHours = 14, initialMinutes = 0 }): JSX.Element => {
+export const InputTime: React.FC<InputTimeProps> = ({ initialHours = 14, initialMinutes = 0, onTimeChange }): JSX.Element => {
 
     const [hours, setHours] = React.useState(initialHours);
     const [minutes, setMinutes] = React.useState(initialMinutes);
@@ -14,6 +15,7 @@ export const InputTime: React.FC<InputTimeProps> = ({ initialHours = 14, initial
         const value = parseInt(event.target.value, 10);
         if (!isNaN(value) && value >= 0 && value <= 23) {
             setHours(value);
+            onTimeChange(value, minutes);
         }
     }
 
@@ -21,23 +23,42 @@ export const InputTime: React.FC<InputTimeProps> = ({ initialHours = 14, initial
         const value = parseInt(event.target.value, 10);
         if (!isNaN(value) && value >= 0 && value <= 59) {
             setMinutes(value);
+            onTimeChange(hours, value);
         }
     }
 
     const incrementHours = () => {
-        setHours((prevHours) => (prevHours + 1) % 24);
+
+        setHours((prevHours) => {
+            const newHours = (prevHours + 1) % 24;
+            onTimeChange(newHours, minutes);
+            return newHours;
+        });
+
     }
 
     const decrementHours = () => {
-        setHours((prevHours) => (prevHours === 0 ? 23 : prevHours - 1));
+        setHours((prevHours) => {
+            const newHours = prevHours === 0 ? 23 : prevHours - 1;
+            onTimeChange(newHours, minutes);
+            return newHours;
+        });
     }
 
     const incrementMinutes = () => {
-        setMinutes((prevMinutes) => (prevMinutes + 1) % 60);
+        setMinutes((prevMinutes) => {
+            const newMinutes = (prevMinutes + 1) % 60;
+            onTimeChange?.(hours, newMinutes);
+            return newMinutes;
+        });
     }
 
     const decrementMinutes = () => {
-        setMinutes((prevMinutes) => (prevMinutes === 0 ? 59 : prevMinutes - 1));
+        setMinutes((prevMinutes) => {
+            const newMinutes = (prevMinutes === 0 ? 59 : prevMinutes - 1);
+            onTimeChange?.(hours, newMinutes);
+            return newMinutes;
+        });
     }
 
     return (

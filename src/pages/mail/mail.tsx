@@ -1,6 +1,7 @@
 import { JSX, useState } from "react";
 import { ButtonMessage } from "../../components/button/buttonMessage";
 import { Message } from "../../components/message/message";
+import { useNavigate } from "react-router";
 
 interface MailProps {
     initialType?: 'incoming' | 'outgoing' | 'drafts'
@@ -137,6 +138,12 @@ export const Mail = (props: MailProps): JSX.Element => {
 
     const filteredMessages = messages.filter(message => message.type === currentType);
 
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        navigate('/generalMeetingShareholders/newMessage');
+    }
+
     return (
         <div className="w-[1016px] m-auto">
             <h1 className="text-[32px] text-(--color-text) mt-[26px] mb-[20px]">Общее собрание акционеров</h1>
@@ -145,7 +152,7 @@ export const Mail = (props: MailProps): JSX.Element => {
                     <ButtonMessage
                         title='Создать сообщение'
                         color='yellow'
-                        onClick={() => { }}
+                        onClick={() => handleClick()}
                     />
                     <ButtonMessage
                         title='Входящие'

@@ -31,26 +31,27 @@ export const Select = (props: SelectProps) => {
         <div>
             <button
                 onClick={handleToggle}
-                className="w-[100%] 
+                className={`w-[100%] 
                     h-[28px] 
                     py-auto 
                     px-[10px] 
                     bg-(--color-white) 
                     text-sm 
                     font-(--font-display) 
-                    placeholder-(--color-placeholder) 
-                    text-(--color-text)
+                    placeholder-(--color-placeholder)
+                    ${selectedOption ? 'text-(--color-text)' : 'text-(--color-placeholder)'} 
+                    
                     inline-flex
                     justify-between
                     items-center
                     rounded-[1px]
-                    "
+                    `}
             >
                 {selectedOption ? selectedOption.label : placeholder}
                 {!isOpen ? <img src={arrow} /> : <img src={arrow} className="rotate-180" />}
             </button>
             {isOpen && (
-                <ul>
+                <ul className="z-10 absolute w-[424px]">
                     {options.map((option) => (
                         <li
                             key={option.value}
