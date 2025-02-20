@@ -3,7 +3,8 @@ import React, { useEffect } from "react";
 interface IModalProps {
     children: React.ReactNode;
     onClose: () => void;
-    visible: boolean
+    visible: boolean;
+    type?: 'message' | 'warning'
 }
 
 export const Modal = (props: IModalProps) => {
@@ -41,15 +42,16 @@ export const Modal = (props: IModalProps) => {
                         "
             onClick={onClose}
         >
-            <div className="
-                            w-[811px]
-                            bg-(--color-button-active)
+            <div className={`
+                            ${props.type === 'message' 
+                                ? ' w-[811px] bg-(--color-button-active)' 
+                                : 'w-[577px] bg-white'}
                             outline-[0.5px]
                             outline-black
                             rounded-2xl
                             p-7
                             
-                            "
+                            `}
                 onClick={(e) => e.stopPropagation()}
             >
                 {children}

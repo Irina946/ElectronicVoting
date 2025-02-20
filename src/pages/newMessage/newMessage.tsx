@@ -6,6 +6,8 @@ import { InputTime } from "../../components/input/inputTime";
 import { IAgenda, Row } from "../../components/row/row";
 import { InputFile } from "../../components/input/inputFile";
 import { Button } from "../../components/button/button";
+import { useNavigate } from "react-router";
+import { Modal } from "../../components/modal/modal";
 
 const optionsType = [
     { label: 'Годовое собрание', value: 'year' },
@@ -44,6 +46,13 @@ export const NewMessage = (): JSX.Element => {
     const [selectedTimeMeeting, setSelectedTimeMeeting] = useState({ hours: 14, minutes: 0 });
     const [agendas, setAgendas] = useState<IAgenda[]>(agendaArray);
     const [files, setFiles] = useState<File[]>([]);
+    const [isOpenModal, setIsOpenModal] = useState(false);
+
+    const navigate = useNavigate();
+
+    const handleExit = () => {
+        navigate('/generalMeetingShareholders');
+    }
 
     const handelNewQuestion = (question: IAgenda) => {
         setAgendas(prevAgendas => [...prevAgendas, question]);
@@ -207,11 +216,21 @@ export const NewMessage = (): JSX.Element => {
                 <div className="mt-7 mb-[7px]">Загрузить материалы:</div>
                 <InputFile onFileSelected={setFiles} />
                 <div className="flex justify-center items-center mt-7 gap-[275px]">
-                    <Button title="Выйти без сохранения" onClick={() => { }} color="empty"/>
+                    <Button title="Выйти без сохранения" onClick={() => setIsOpenModal(true)} color="empty" />
                     <Button title="Сохранить сообщение" onClick={() => { }} color="yellow" />
                 </div>
             </div>
+            {isOpenModal && <Modal onClose={() => setIsOpenModal(false)} visible={isOpenModal} type="warning">
+                <div className="flex items-center flex-col text-(--color-text) text-lg">
+                    <p className="mb-[7px]">Вы уверены, что хотите выйти из раздела создания сообщения?</p>
+                    <p>Все несохранённые данные удалятся!</p>
+                    <div className="mt-14 flex gap-16">
+                        <Button title="Продолжить" onClick={() => setIsOpenModal(false)} color="empty" />
+                        <Button title="Выйти без сохранения" onClick={handleExit} color="empty" />
+                    </div>
+                </div>
 
+            </Modal>}
         </div>
     )
 }

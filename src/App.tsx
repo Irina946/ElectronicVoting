@@ -25,20 +25,23 @@ function App() {
 function HeaderComponent() {
   const location = useLocation();
 
-  let headertext;
+  const header = {text: '', path: ''};
   switch (location.pathname) {
     case '/generalMeetingShareholders':
-      headertext = '';
+      header.text = '';
+      header.path = ''
       break;
     case '/generalMeetingShareholders/newMessage':
-      headertext = '/ Создать сообщение';
+      header.text = 'Создать сообщение';
+      header.path = '/generalMeetingShareholders/newMessage';
       break;
     default:
-      headertext = '';
+      header.text = '';
+      header.path = '';
   }
 
   return (
-    <Header path={headertext} />
+    <Header title={header.text} path={header.path} />
   )
 }
 
