@@ -1,0 +1,8 @@
+.borderTop {
+    border-top: 0.5px solid black;
+}
+
+.border {
+    border: 0.5px solid black;
+    margin-top: -1px;
+}

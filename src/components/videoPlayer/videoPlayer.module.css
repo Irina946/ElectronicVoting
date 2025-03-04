@@ -1,0 +1,75 @@
+/* VideoPlayer.module.css */
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 90px;
+    height: 5px;
+    background: var(--color-icon);
+    outline: none;
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    margin-top: -3px;
+    background: var(--color-gray-video);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #8a8a8a 0%, #8a8a8a calc(var(--range) * 100%), #cecece calc(var(--range) * 100%), #cecece 100%);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--color-icon);
+    ;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #8a8a8a 0%, #8a8a8a calc(var(--range) * 100%), #cecece calc(var(--range) * 100%), #cecece 100%);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.slider::-ms-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--color-icon);
+    ;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider::-ms-track {
+    width: 100%;
+    height: 8px;
+    background: transparent;
+    border-color: transparent;
+    border-width: 16px 0;
+    color: transparent;
+}
+
+.slider::-ms-fill-lower {
+    background: var(--color-gray-video);
+    border-radius: 4px;
+}
+
+.slider::-ms-fill-upper {
+    background: var(--color-icon);
+    border-radius: 4px;
+}

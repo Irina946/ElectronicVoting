@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { JSX } from "react";
 import { ButtonMessage } from "../button/buttonMessage";
 
@@ -9,19 +10,25 @@ interface MessageProps {
     type: "incoming" | "outgoing" | "drafts";
 }
 
-const formatedDate = (date: Date): string => {
+export const formatedDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}.${month}.${year}`
 }
 
-const formatedText = (text: string, type: "incoming" | "outgoing" | "drafts"): string => {
+export const formatedText = (text: string, type: "incoming" | "outgoing" | "drafts" | "shareholder", ): string => {
     if (type === 'drafts') {
         if (text.length <= 76) {
             return `«${text}»`
         }
         return `«${text.substring(0, 76)}...»`;
+    }
+    if (type === 'shareholder') {
+        if (text.length <= 85) {
+            return `«${text}»`
+        }
+        return `«${text.substring(0, 85)}...»`
     }
     if (text.length <= 91) {
         return `«${text}»`

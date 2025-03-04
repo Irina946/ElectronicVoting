@@ -146,7 +146,7 @@ export const Mail = (props: MailProps): JSX.Element => {
 
     return (
         <div className="w-[1016px] m-auto">
-            <h1 className="text-[32px] text-(--color-text) mt-[26px] mb-[20px]">Общее собрание акционеров</h1>
+            <h1 className="text-[32px] text-(--color-text) my-7">Общее собрание акционеров</h1>
             <div className="flex mb-[20px] border-[0.5px] rounded-2xl h-[519px]">
                 <div className="w-[185px] rounded-l-2xl p-[14px]  border-r-[0.5px]">
                     <ButtonMessage
