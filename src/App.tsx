@@ -8,6 +8,7 @@ import { MailShareholder } from './pages/mailShareholder/mailShareholder'
 import { Message } from './pages/message/message'
 import { Broadcast } from './pages/broadcast/broadcast'
 import { Voting } from './pages/voting/voting'
+import { MessagePageAdmin } from './pages/messagePageAdmin/messagePageAdmin'
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/mailShareholder/message" element={<Message />} />
         <Route path="/mailShareholder/broadcast" element={<Broadcast />} />
         <Route path="/mailShareholder/voting" element={<Voting />} />
+        <Route path="/generalMeetingShareholders/messagePageAdmin/:id" element={<MessagePageAdmin />} />
       </Routes>
       <Footer />
 

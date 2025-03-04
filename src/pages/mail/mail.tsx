@@ -1,4 +1,4 @@
-import { JSX, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { ButtonMessage } from "../../components/button/buttonMessage";
 import { Message } from "../../components/message/message";
 import { useNavigate } from "react-router";
@@ -130,7 +130,14 @@ const messages = [
 ];
 export const Mail = (props: MailProps): JSX.Element => {
     const { initialType = 'incoming' } = props;
-    const [currentType, setCurrentType] = useState<'incoming' | 'outgoing' | 'drafts'>(initialType);
+    const [currentType, setCurrentType] = useState<'incoming' | 'outgoing' | 'drafts'>(() => {
+        const savedType = localStorage.getItem('messageType');
+        return savedType as 'incoming' | 'outgoing' | 'drafts' || initialType;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('messageType', currentType);
+    }, [currentType]);
 
     const handleButtonClick = (type: 'incoming' | 'outgoing' | 'drafts') => {
         setCurrentType(type);
@@ -142,6 +149,10 @@ export const Mail = (props: MailProps): JSX.Element => {
 
     const handleClick = () => {
         navigate('/generalMeetingShareholders/newMessage');
+    }
+
+    const handleClickMessage = (id: number) => {
+        navigate(`/generalMeetingShareholders/messagePageAdmin/${id}`, { state: { id } });
     }
 
     return (
@@ -179,7 +190,12 @@ export const Mail = (props: MailProps): JSX.Element => {
 
                             <Message
                                 title={message.content}
-                                onClick={() => { }}
+                                onClick={() =>
+                                (currentType === 'drafts'
+                                    ? handleClick()
+                                    : handleClickMessage(message.id)
+                                )
+                                }
                                 date={message.date}
                                 isRead={message.isRead}
                                 type={currentType}
