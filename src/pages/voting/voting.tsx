@@ -1,7 +1,8 @@
-import { JSX } from "react";
+import { JSX, useState } from "react";
 import { IAgenda } from "../../components/row/row";
 import { RowVotingOne } from "../../components/rowVoting/rowVotingOne";
 import { RowVotingNotCandidates } from "../../components/rowVoting/rowVotingNotCandidates";
+import { RowVotingCandidatesCumulative } from "../../components/rowVoting/rowVotingCandidatesCumulative";
 import { RowVotingCandidates } from "../../components/rowVoting/rowVotingCandidates";
 
 const agendaArray: IAgenda[] = [
@@ -45,19 +46,18 @@ const agendaArray: IAgenda[] = [
         ],
         solution: ' Избрать ревизионную комиссию в составе:',
         materials: [],
-        cumulativeVotes: true
+        cumulativeVotes: false
     }
 ];
 
 export const Voting = (): JSX.Element => {
-    // const [arrowRotate, setArrowRotate] = useState<{ [key: number]: boolean }>({});
+    const [votes, setVotes] = useState<{ [key: number]: string | { [candidate: string]: number | string } }>({});
 
-    // const toggleArrow = (id: number) => {
-    //     setArrowRotate(prevState => ({
-    //         ...prevState,
-    //         [id]: !prevState[id]
-    //     }));
-    // };
+    const handleVoteChange = (agendaNumber: number, vote: string | { [candidate: string]: number | string }) => {
+        setVotes(prev => ({ ...prev, [agendaNumber]: vote }));
+    };
+
+    console.log(votes)
 
     return (
         <div className="w-[1016px] m-auto">
@@ -111,15 +111,19 @@ export const Voting = (): JSX.Element => {
                     <>
                         {
                             agenda.candidates.length === 0 && agenda.number === 1 &&
-                            <RowVotingOne agenda={agenda} />
+                            <RowVotingOne agenda={agenda} onVoteChange={handleVoteChange} key={agenda.number} />
                         }
                         {
                             agenda.candidates.length === 0 && agenda.number !== 1 &&
-                            <RowVotingNotCandidates agenda={agenda} />
+                            <RowVotingNotCandidates agenda={agenda} onVoteChange={handleVoteChange} key={agenda.number} />
                         }
                         {
-                            agenda.candidates.length !== 0 && agenda.number !== 1 &&
-                            <RowVotingCandidates agenda={agenda} />
+                            agenda.candidates.length !== 0 && agenda.number !== 1 && agenda.cumulativeVotes &&
+                            <RowVotingCandidatesCumulative agenda={agenda} onVoteChange={handleVoteChange} totalVotes={500} key={agenda.number} />
+                        }
+                        {
+                            agenda.candidates.length !== 0 && agenda.number !== 1 && !agenda.cumulativeVotes &&
+                            <RowVotingCandidates agenda={agenda} key={agenda.number} onVoteChange={handleVoteChange}/>
                         }
                     </>
                 ))}

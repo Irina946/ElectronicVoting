@@ -21,9 +21,9 @@ function App() {
         <Route path="/generalMeetingShareholders" element={<Mail />} />
         <Route path="/generalMeetingShareholders/newMessage" element={<NewMessage />} />
         <Route path="/mailShareholder" element={<MailShareholder />} />
-        <Route path="/mailShareholder/message" element={<Message />} />
+        <Route path="/mailShareholder/message/:id" element={<Message />} />
         <Route path="/mailShareholder/broadcast" element={<Broadcast />} />
-        <Route path="/mailShareholder/voting" element={<Voting />} />
+        <Route path="/mailShareholder/message/voting" element={<Voting />} />
         <Route path="/generalMeetingShareholders/messagePageAdmin/:id" element={<MessagePageAdmin />} />
       </Routes>
       <Footer />

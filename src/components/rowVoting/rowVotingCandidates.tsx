@@ -2,17 +2,21 @@ import { JSX, useState } from "react";
 import { IAgenda } from "../row/row";
 import { Checkbox } from "../checkbox/checkbox";
 import arrow from "../../assets/arrowSelect.svg";
-import styles from "./rowVoting.module.css"
-import { InputVoting } from "../input/inputVoting";
+import styles from "./rowVoting.module.css";
 
 interface RowVotingProps {
-    agenda: IAgenda
+    agenda: IAgenda;
+    onVoteChange: (agendaNumber: number, votes: { [candidate: string]: string }) => void;
 }
 
 export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
-    const agenda = props.agenda
+    const {agenda, onVoteChange} = props
+
+    const initialVotes = Object.fromEntries(agenda.candidates.map(candidate => [candidate, ""]));
 
     const [arrowRotate, setArrowRotate] = useState<{ [key: number]: boolean }>({});
+    const [checkedMainCheckbox, setCheckedMainCheckbox] = useState<string>('')
+    const [candidateChoice, setCandidateChoiсe] = useState<{ [candidate: string]: string }>(initialVotes)
 
     const toggleArrow = (id: number) => {
         setArrowRotate(prevState => ({
@@ -20,6 +24,43 @@ export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
             [id]: !prevState[id]
         }));
     };
+
+    const handelClickMainCheckbox = (type: string) => {
+        setCheckedMainCheckbox(type)
+        setCandidateChoiсe((prevVotes) => {
+            const newVotes = { ...prevVotes };
+            agenda.candidates.forEach((candidate) => {
+                newVotes[candidate] = type;
+            });
+            onVoteChange(agenda.number, newVotes)
+            return newVotes;
+        });
+    }
+
+    const allValuesAreSame = (votes: { [candidate: string]: string }): boolean => {
+        const values = Object.values(votes);
+        return values.length === 0 || values.every(value => value === values[0]);
+    };
+
+    const handleClickCheckbox = (candidate: string, type: string) => {
+        setCandidateChoiсe((prevVotes) => {
+            const updatedVotes = {
+                ...prevVotes,
+                [candidate]: type,
+            };
+
+            // Проверяем, одинаковы ли все значения
+            if (allValuesAreSame(updatedVotes)) {
+                setCheckedMainCheckbox(updatedVotes[candidate])
+            } else {
+                setCheckedMainCheckbox('')
+            }
+            onVoteChange(agenda.number, updatedVotes)
+
+            return updatedVotes;
+        });
+
+    }
 
     return (
         <div>
@@ -43,20 +84,6 @@ export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
                                     material.name
                                 ))}
                             </div>
-                            <div className="w-[270px] flex gap-3.5 items-center">
-                                <div>
-                                    Количество кумулятивных голосов:
-                                </div>
-                                <div className="
-                                                            border-[0.5px] 
-                                                            border-black 
-                                                            bg-(--color-gray) 
-                                                            w-[40px] 
-                                                            py-[5px] 
-                                                            px-2">
-                                    500
-                                </div>
-                            </div>
                         </div>
                         <div className="flex flex-col gap-[7px]">
                             <div>
@@ -77,22 +104,22 @@ export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
                     </div>
                     <div className="border-r-[0.5px] flex items-center justify-center py-5">
                         <Checkbox
-                            checked={false}
-                            onChange={() => { }}
+                            checked={checkedMainCheckbox === "ЗА"}
+                            onChange={() => handelClickMainCheckbox("ЗА")}
                             voting={true}
                         />
                     </div>
                     <div className="border-r-[0.5px] flex items-center justify-center py-5">
                         <Checkbox
-                            checked={false}
-                            onChange={() => { }}
+                            checked={checkedMainCheckbox === "ПРОТИВ"}
+                            onChange={() => handelClickMainCheckbox("ПРОТИВ")}
                             voting={true}
                         />
                     </div>
                     <div className="flex items-center justify-center py-5">
                         <Checkbox
-                            checked={false}
-                            onChange={() => { }}
+                            checked={checkedMainCheckbox === "ВОЗДЕРЖАЛСЯ"}
+                            onChange={() => handelClickMainCheckbox("ВОЗДЕРЖАЛСЯ")}
                             voting={true}
                         />
                     </div>
@@ -111,11 +138,54 @@ export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
                             <div className={`py-3.5 px-12 ${styles.borderTop}`}>
                                 {candidate}
                             </div>
-                            <div className={`${styles.borderTop} border-l-[1px] border-l-black py-2 px-8`}>
-                                <InputVoting value="100" onChange={() => {}}/>
+                            <div className={`
+                                            ${styles.borderTop} 
+                                            border-l-[1px] 
+                                            border-l-black 
+                                            flex 
+                                            items-center 
+                                            justify-center
+                                            `}>
+                                <Checkbox
+                                    checked={candidateChoice[candidate] === "ЗА"}
+                                    onChange={() => handleClickCheckbox(candidate, "ЗА")}
+                                    voting={true}
+                                />
                             </div>
-                            <div className={`border-l-[1px] border-l-black ${idx === 0 ? 'border-t-[1px]' : ''}`}></div>
-                            <div className={`border-l-[1px] border-l-black ${idx === 0 ? 'border-t-[1px]' : ''}`}></div>
+                            <div className={`
+                                            ${styles.borderTop} 
+                                            py-2 
+                                            px-8 
+                                            border-l-[1px] 
+                                            border-l-black 
+                                            ${idx === 0 ? 'border-t-[1px]' : ''}
+                                            flex 
+                                            items-center 
+                                            justify-center
+                                            `}>
+                                <Checkbox
+                                    checked={candidateChoice[candidate] === "ПРОТИВ"}
+                                    onChange={() => handleClickCheckbox(candidate, "ПРОТИВ")}
+                                    voting={true}
+                                />
+                            </div>
+                            <div className={`
+                                            flex 
+                                            items-center 
+                                            justify-center
+                                            ${styles.borderTop} 
+                                            py-2 
+                                            px-8 
+                                            border-l-[1px] 
+                                            border-l-black 
+                                            ${idx === 0 ? 'border-t-[1px]' : ''}
+                                            `}>
+                                <Checkbox
+                                    checked={candidateChoice[candidate] === "ВОЗДЕРЖАЛСЯ"}
+                                    onChange={() => handleClickCheckbox(candidate, "ВОЗДЕРЖАЛСЯ")}
+                                    voting={true}
+                                />
+                            </div>
                         </div>
                     ))}
                 </div>

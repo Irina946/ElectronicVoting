@@ -163,7 +163,7 @@ export const Row = (props: IRowProps) => {
                 </div>
             </div>
             {isOpenModal && (
-                <Modal onClose={handleCloseModal} visible={isOpenModal}>
+                <Modal onClose={handleCloseModal} visible={isOpenModal} type="message">
                     <div className="w-full text-center text-(--color-red) font-bold text-base">
                         Добавить вопрос в повестку дня
                     </div>

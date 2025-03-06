@@ -1,13 +1,22 @@
-import { JSX } from "react";
+import { JSX, useState } from "react";
 import { IAgenda } from "../row/row";
 import { Checkbox } from "../checkbox/checkbox";
 
 interface RowVotingProps {
-    agenda: IAgenda
+    agenda: IAgenda;
+    onVoteChange: (agendaNumber: number, vote: string) => void;
 }
 
 export const RowVotingNotCandidates = (props: RowVotingProps): JSX.Element => {
-    const agenda = props.agenda
+    const { agenda, onVoteChange } = props
+
+    const [selectedVote, setSelectedVote] = useState<string | null>(null);
+
+    const handleVoteChange = (vote: string) => {
+        setSelectedVote(vote);
+        onVoteChange(agenda.number, vote)
+    }
+
     return (
         <div>
             <div className="
@@ -41,22 +50,22 @@ export const RowVotingNotCandidates = (props: RowVotingProps): JSX.Element => {
 
                 <div className="border-r-[0.5px] flex items-center justify-center py-5">
                     <Checkbox
-                        checked={false}
-                        onChange={() => { }}
+                        checked={selectedVote === "ЗА"}
+                        onChange={() => handleVoteChange("ЗА")}
                         voting={true}
                     />
                 </div>
                 <div className="border-r-[0.5px] flex items-center justify-center py-5">
                     <Checkbox
-                        checked={false}
-                        onChange={() => { }}
+                        checked={selectedVote === "ПРОТИВ"}
+                        onChange={() => handleVoteChange("ПРОТИВ")}
                         voting={true}
                     />
                 </div>
                 <div className="flex items-center justify-center py-5">
                     <Checkbox
-                        checked={false}
-                        onChange={() => { }}
+                        checked={selectedVote === "ВОЗДЕРЖАЛСЯ"}
+                        onChange={() => handleVoteChange("ВОЗДЕРЖАЛСЯ")}
                         voting={true}
                     />
                 </div>

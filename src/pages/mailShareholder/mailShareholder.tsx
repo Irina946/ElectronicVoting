@@ -1,5 +1,4 @@
 import { JSX } from "react"
-import { Button } from "../../components/button/button"
 import { MessageShareholder } from "../../components/messageShareholder/messageShareholder"
 import { useNavigate } from "react-router"
 
@@ -92,27 +91,15 @@ export const MailShareholder = (): JSX.Element => {
     const navigate = useNavigate();
 
     const handleClickMessage = (id: number) => {
-        navigate('/mailShareholder/message', { state: { id } });
+        navigate(`/mailShareholder/message/${id}`, { state: { id } });
     }
-
-    const handleClickBroadcast = () => {
-        navigate('/mailShareholder/broadcast')
-    }
-
-    const handleClickVoting = () => {
-        navigate('/mailShareholder/voting')
-    }
-
 
     return (
         <div className="w-[1016px] m-auto">
             <h1 className="text-[32px] text-(--color-text) my-7">
                 Общее собрание акционеров
             </h1>
-            <div className="flex gap-7 mb-7 text-sm w-[961px]">
-                <Button title='Проголосовать' color='yellow' onClick={() => handleClickVoting()} />
-                <Button title='Трансляция собрания' color='yellow' onClick={() => handleClickBroadcast()} />
-            </div>
+            
             <div className="
                             flex 
                             gap-[5px] 

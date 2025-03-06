@@ -1,11 +1,27 @@
 import { JSX } from "react"
+import { Button } from "../../components/button/button"
+import { useNavigate } from "react-router"
 
 export const Message = (): JSX.Element => {
+    const navigate = useNavigate();
+
+    const handleClickBroadcast = () => {
+        navigate('/mailShareholder/broadcast')
+    }
+
+    const handleClickVoting = () => {
+        navigate('/mailShareholder/message/voting')
+    }
+
     return (
         <div className="w-[1016px] m-auto">
             <h1 className="text-[32px] text-(--color-text) my-7">
                 Сообщение о проведении собрания
             </h1>
+            <div className="flex gap-7 mb-7 text-sm w-[961px]">
+                <Button title='Проголосовать' color='yellow' onClick={() => handleClickVoting()} />
+                <Button title='Трансляция собрания' color='yellow' onClick={() => handleClickBroadcast()} />
+            </div>
             <div className="
                             w-[1016px] 
                             p-7 rounded-2xl 
