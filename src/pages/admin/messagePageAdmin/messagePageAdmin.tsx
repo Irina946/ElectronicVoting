@@ -1,13 +1,46 @@
 import { JSX, useEffect, useState } from "react"
-import { ButtonMessageAdmin } from "../../components/button/buttonMessageAdmin"
-import { Information } from "../../components/informations/information";
-import { Participants } from "../../components/informations/participants";
-import { Results } from "../../components/informations/results";
+import { ButtonMessageAdmin } from "../../../components/button/buttonMessageAdmin"
+import { Information } from "../../../components/informations/information";
+import { Participants } from "../../../components/informations/participants";
+import { IResult, Results } from "../../../components/informations/results";
 import { useNavigate } from "react-router";
 
-// interface MessagePageAdminProps {
-
-// }
+const results: IResult[] = [
+    {
+        id: 19,
+        results: [
+            {
+                detailId: null,
+                for: 1000,
+                against: 400,
+                abstain: 1000
+            }
+        ]
+    },
+    {
+        id: 20,
+        results: [
+            {
+                detailId: 4,
+                for: 2400,
+                against: 0,
+                abstain: 0
+            },
+            {
+                detailId: 5,
+                for: 200,
+                against: 1000,
+                abstain: 1200
+            },
+            {
+                detailId: 6,
+                for: 0,
+                against: 600,
+                abstain: 1800
+            }
+        ]
+    }
+]
 
 export const MessagePageAdmin = (): JSX.Element => {
     
@@ -59,8 +92,8 @@ export const MessagePageAdmin = (): JSX.Element => {
             </div>
             <div className="mb-7">
                 {currentType === 'information' && <Information />}
-                {currentType === 'participants' && <Participants endDate={new Date("2025-03-15T23:59:59")} />}
-                {currentType === 'results' && <Results endTime={new Date("2025-03-15T23:59:59")} />}
+                {currentType === 'participants' && <Participants endDate={new Date("2025-03-10T23:59:59")} />}
+                {currentType === 'results' && <Results endTime={new Date("2025-03-18T23:59:59")} results={results}/>}
             </div>
         </div>
     )

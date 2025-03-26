@@ -1,9 +1,25 @@
-import { JSX } from "react"
-import { Button } from "../../components/button/button"
+import { JSX, useState } from "react"
+import { Button } from "../../../components/button/button"
 import { useNavigate } from "react-router"
+import { Alert } from "../../../components/modal/alert";
 
 export const Message = (): JSX.Element => {
+    const [isRegister, setIsRegister] = useState(false);
+    const [isOpenAlert, setIsOpenAlert] = useState(false)
     const navigate = useNavigate();
+
+    const handleClickRegister = () => {
+        setIsRegister(true)
+        setIsOpenAlert(true)
+
+        setTimeout(() => {
+            setIsOpenAlert(false)
+        }, 5000)
+    }
+
+    const handleCloseAlert = () => {
+        setIsOpenAlert(false)
+    };
 
     const handleClickBroadcast = () => {
         navigate('/mailShareholder/broadcast')
@@ -18,9 +34,32 @@ export const Message = (): JSX.Element => {
             <h1 className="text-[32px] text-(--color-text) my-7">
                 Сообщение о проведении собрания
             </h1>
+            {isRegister
+                ? <button
+                    className="mb-7
+                                text-2xl
+                                underline
+                                
+                
+                "
+                    disabled
+                >
+                    Регистрация пройдена
+                </button>
+                : <button
+                    className="mb-7
+                                text-2xl
+                                underline
+                                cursor-pointer
+                                hover:text-(--color-red)
+                "
+                    onClick={handleClickRegister}
+                >
+                    Зарегестрироваться на собрание
+                </button>}
             <div className="flex gap-7 mb-7 text-sm w-[961px]">
-                <Button title='Проголосовать' color='yellow' onClick={() => handleClickVoting()} />
-                <Button title='Трансляция собрания' color='yellow' onClick={() => handleClickBroadcast()} />
+                <Button title='Проголосовать' color='yellow' onClick={() => handleClickVoting()} disabled={!isRegister} />
+                <Button title='Трансляция собрания' color='yellow' onClick={() => handleClickBroadcast()} disabled={!isRegister} />
             </div>
             <div className="
                             w-[1016px] 
@@ -93,6 +132,9 @@ export const Message = (): JSX.Element => {
                 </div>
 
             </div>
+            {isOpenAlert &&
+                <Alert message="Регистрация пройдена" onClose={handleCloseAlert} />
+            }
         </div>
     )
 }

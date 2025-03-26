@@ -1,9 +1,9 @@
 import { JSX, useState } from "react";
-import { IAgenda } from "../../components/row/row";
-import { RowVotingOne } from "../../components/rowVoting/rowVotingOne";
-import { RowVotingNotCandidates } from "../../components/rowVoting/rowVotingNotCandidates";
-import { RowVotingCandidatesCumulative } from "../../components/rowVoting/rowVotingCandidatesCumulative";
-import { RowVotingCandidates } from "../../components/rowVoting/rowVotingCandidates";
+import { IAgenda } from "../../../components/row/row";
+import { RowVotingOne } from "../../../components/rowVoting/rowVotingOne";
+import { RowVotingNotCandidates } from "../../../components/rowVoting/rowVotingNotCandidates";
+import { RowVotingCandidatesCumulative } from "../../../components/rowVoting/rowVotingCandidatesCumulative";
+import { RowVotingCandidates } from "../../../components/rowVoting/rowVotingCandidates";
 
 const agendaArray: IAgenda[] = [
     {

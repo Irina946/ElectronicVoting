@@ -1,13 +1,32 @@
-import { Link } from "react-router";
+import { Link, matchPath, useLocation } from "react-router";
 import headerTop from "../../assets/header1.svg"
 import headerCenter from "../../assets/header2.svg"
 
-interface HeaderProps {
-    path?: string
-    title?: string
+interface RouteConfig {
+    path: string;
+    text: string;
+    pathPrev: string;
+    pathNext?: string;
 }
-export const Header = (props: HeaderProps) => {
-    const {path, title} = props
+
+const routes: RouteConfig[] = [
+    { path: "/admin", text: "", pathPrev: "/" },
+    { path: "/admin/meeting/new", text: "Создать сообщение", pathPrev: "/admin" },
+    { path: "/admin/meeting/:meetingID", text: "Собрание", pathPrev: "/admin" },
+    { path: "/admin/meeting/:meetingID/edit", text: "Редактировать сообщение", pathPrev: "/admin" },
+    { path: "/admin/meeting/:meetingID/results/:userID", text: "Результаты участника", pathPrev: "/admin/meeting/:meetingID" },
+    { path: "/user", text: "", pathPrev: "/" },
+    { path: "/user/meeting/:meetingID", text: "Сообщение", pathPrev: "/user" },
+    { path: "/user/meeting/:meetingID/broadcast", text: "Трансляция собрания", pathPrev: "/user/meeting/:meetingID" },
+    { path: "/user/meeting/:meetingID/voting/:userID", text: "Голосование", pathPrev: "/user/meeting/:meetingID" }
+];
+
+export const Header = () => {
+
+    const location = useLocation();
+
+    const currentRoute = routes.find(route => matchPath(route.path, location.pathname));
+
     return (
         <div className="flex flex-col justify-center items-center">
             <img src={headerTop} alt="Header" />
@@ -17,10 +36,10 @@ export const Header = (props: HeaderProps) => {
             <div className="bg-(--color-gray) w-[100%] h-[50px] align-middle flex justify-center">
                 <div className="w-[1020px] text-base font-(--font-display) py-[15px] text-(--color-text)">
                     <u>Главная</u> / <u>Услуги</u> / Сервис - Личный кабинет / <Link
-                        to={'/generalMeetingShareholders'}
+                        to={currentRoute?.pathPrev || '/'}
                         className="cursor-pointer hover:border-b-[1px] hover:border-(--color-text)">
                         Сервис - Общее собрание акционеров
-                    </Link> {path ? <Link to={path}>/ {title}</Link> : ''}
+                    </Link> {currentRoute?.path ? <Link to={currentRoute.path}>/ {currentRoute.text}</Link> : ''}
                 </div>
             </div>
         </div>

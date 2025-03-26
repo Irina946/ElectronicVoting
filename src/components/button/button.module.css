@@ -27,3 +27,14 @@
         disabled:bg-(--color-button-active)
         disabled:cursor-auto
 }
+
+
+.disabled {
+    @apply 
+        bg-(--color-button)
+        cursor-not-allowed
+        hover:bg-(--color-button) 
+        focus:bg-(--color-button) 
+        active:bg-(--color-button)
+        disabled:bg-(--color-button)
+}

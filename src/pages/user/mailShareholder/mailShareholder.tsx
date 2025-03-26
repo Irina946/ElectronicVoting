@@ -1,5 +1,5 @@
 import { JSX } from "react"
-import { MessageShareholder } from "../../components/messageShareholder/messageShareholder"
+import { MessageShareholder } from "../../../components/messageShareholder/messageShareholder"
 import { useNavigate } from "react-router"
 
 
@@ -91,7 +91,7 @@ export const MailShareholder = (): JSX.Element => {
     const navigate = useNavigate();
 
     const handleClickMessage = (id: number) => {
-        navigate(`/mailShareholder/message/${id}`, { state: { id } });
+        navigate(`/user/meeting/${id}`, { state: { id } });
     }
 
     return (

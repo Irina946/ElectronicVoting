@@ -3,7 +3,7 @@ import styles from "./button.module.css"
 
 interface ButtonMessageProps {
     title: string;
-    onClick: () => void;
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
     color: "empty" | "yellow";
     isSelected?: boolean;
     textSize?: string;

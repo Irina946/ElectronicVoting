@@ -5,10 +5,11 @@ interface ButtonProps {
     title: string;
     onClick: () => void
     color: "empty" | "yellow"
+    disabled?: boolean
 }
 
 export const Button = (props: ButtonProps): JSX.Element => {
-    const { title, onClick, color } = props;
+    const { title, onClick, color, disabled } = props;
 
     return (
         <button
@@ -19,14 +20,17 @@ export const Button = (props: ButtonProps): JSX.Element => {
                     h-[45px]
                     ${color === "empty"
                     ? styles.buttonEmpty
-                    : styles.buttonYellow} 
+                    : styles.buttonYellow}
+                    ${disabled ? styles.disabled : ''} 
                     text-(--color-black)
                     text-sm
                     font-bold
                     rounded-2xl
                     shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
                     cursor-pointer
-                    `}>
+                    `}
+                    disabled={disabled}
+                    >
             {title}
         </button>
     )

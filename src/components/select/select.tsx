@@ -1,15 +1,16 @@
 import { useState } from "react";
 import arrow from "../../assets/arrowSelect.svg"
 
-interface Option {
-    label: string
-    value: string
+export interface Option {
+    label: string,
+    value: boolean | string,
+    repeat?: boolean
 }
 
 interface SelectProps {
     options: Option[],
     placeholder: string,
-    onChange: (value: string) => void
+    onChange: (value: boolean | string, repeat?: boolean) => void
 }
 
 export const Select = (props: SelectProps) => {
@@ -23,7 +24,7 @@ export const Select = (props: SelectProps) => {
 
     const handleSelect = (option: Option) => {
         setSelectedOption(option);
-        onChange(option.value)
+        onChange(option.value, option.repeat)
         setIsOpen(false);
     };
 
@@ -54,7 +55,7 @@ export const Select = (props: SelectProps) => {
                 <ul className="z-10 absolute w-[424px]">
                     {options.map((option) => (
                         <li
-                            key={option.value}
+                            key={option.label}
                             onClick={() => handleSelect(option)}
                             className="w-[100%]
                                     h-[28px]

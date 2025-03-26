@@ -7,7 +7,7 @@ interface MessageProps {
     onClick: () => void;
     date: Date;
     isRead: boolean;
-    type: "incoming" | "outgoing" | "drafts";
+    type: "outgoing" | "drafts";
 }
 
 export const formatedDate = (date: Date): string => {
@@ -17,7 +17,7 @@ export const formatedDate = (date: Date): string => {
     return `${day}.${month}.${year}`
 }
 
-export const formatedText = (text: string, type: "incoming" | "outgoing" | "drafts" | "shareholder", ): string => {
+export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareholder",): string => {
     if (type === 'drafts') {
         if (text.length <= 76) {
             return `«${text}»`
@@ -42,9 +42,7 @@ export const Message = (props: MessageProps): JSX.Element => {
     const { title, onClick, date, isRead, type } = props;
 
     const circleStyle = () => {
-        if (type === 'incoming') {
-            return isRead ? 'bg-transparent' : 'bg-(--color-red)';
-        } else if (type === 'outgoing') {
+        if (type === 'outgoing') {
             return isRead ? 'bg-(--color-green)' : 'bg-(--color-red)';
         } else if (type === 'drafts') {
             return 'hidden';
@@ -70,8 +68,7 @@ export const Message = (props: MessageProps): JSX.Element => {
             <div className={`
                                 flex 
                                 items-center 
-                                ${type === 'drafts' ? 'ml-[7px]' : 'ml-[28px]'}  
-                                ${type === 'incoming' && !isRead ? 'font-bold' : ''}
+                                ${type === 'drafts' ? 'ml-[7px]' : 'ml-[28px]'}
                             `}>
                 <div className={`
                     w-[13px] 
@@ -85,7 +82,14 @@ export const Message = (props: MessageProps): JSX.Element => {
                 <div className="flex justify-between w-full pr-[14px]">
                     {formatedText(title, type)}
                     {type === 'drafts' && (
-                        <ButtonMessage title='Отправить сообщение' color='yellow' textSize="text-sm" onClick={() => { }} />
+                        <ButtonMessage
+                            title='Отправить сообщение'
+                            color='yellow'
+                            textSize="text-sm"
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                console.log('ok')
+                            }} />
                     )}
                 </div>
 

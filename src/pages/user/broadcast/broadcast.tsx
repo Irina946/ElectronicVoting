@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { VideoPlayer } from "../../components/videoPlayer/videoPlayer";
+import { VideoPlayer } from "../../../components/videoPlayer/videoPlayer";
 
 export const Broadcast = (): JSX.Element => {
     return (

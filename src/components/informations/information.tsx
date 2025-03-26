@@ -8,15 +8,13 @@ export const Information = (): JSX.Element => {
                         border-[1px]
                         rounded-2xl
                         p-7
+                        text-sm
                         ">
             <div className="flex flex-col items-center mb-3.5">
                 <div className="font-bold">Информация</div>
                 <div className="w-[331px] text-center">
                     о проведении годового общего собрания акционеров Акционерного общества «Предприятие №1»
                 </div>
-            </div>
-            <div className="font-bold mb-3.5 text-center">
-                УВАЖАЕМЫЙ АКЦИОНЕР!
             </div>
             <div className="mb-3.5 indent-3">
                 В соответствии с решением Совета директоров Акционерного общества «Предприятие №1» (место нахождения Общества: Россия, Свердловская область,
