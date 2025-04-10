@@ -1,32 +1,98 @@
-import { JSX, useState } from "react"
-import { Button } from "../../../components/button/button"
-import { useNavigate } from "react-router"
+import { JSX, useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router"
 import { Alert } from "../../../components/modal/alert";
+import { getAccounts, getMeetingForId, postRegister } from "../../../requests/requests";
+import { IMeeting, IUsersInMeeting } from "../../../requests/interfaces";
+import { Modal } from "../../../components/modal/modal";
+import { ButtonAccounts } from "../../../components/button/buttonAccounts";
+import { ButtonMessageAdmin } from "../../../components/button/buttonMessageAdmin";
+import { AxiosError } from "axios";
+import { MeetingInfo } from "../../../components/meetingInfo/meetingInfo";
+import { getNameCompany } from "../../../utils/functions";
+import MeetingActions from "../../../components/meetingInfo/meetingButton";
 
 export const Message = (): JSX.Element => {
     const [isRegister, setIsRegister] = useState(false);
-    const [isOpenAlert, setIsOpenAlert] = useState(false)
+    const [isOpenAlert, setIsOpenAlert] = useState(false);
+    const [isOpenModal, setIsOpenModal] = useState(false)
     const navigate = useNavigate();
+    const location = useLocation();
+    const [informationMeeting, setInformationMeeting] = useState<IMeeting>()
+    const [accaunts, setAccaunts] = useState<IUsersInMeeting[]>()
+    const [selectedAccaunt, setSelectedAccaunt] = useState<IUsersInMeeting>({
+        account_id: 0,
+        account_fullname: ''
+    })
+    const [errorRegister, setErrorRegister] = useState<string>('')
 
-    const handleClickRegister = () => {
-        setIsRegister(true)
-        setIsOpenAlert(true)
+    const idMeeting: { id: number } = location.state
+
+    const handleClickRegister = async () => {
+        const register = async () => {
+            try {
+                const data = await postRegister(idMeeting.id)
+                setIsRegister(data.message === 'Вы успешно зарегистрированы на собрание.');
+                setIsOpenAlert(data.message === 'Вы успешно зарегистрированы на собрание.');
+                setErrorRegister("");
+            } catch (error) {
+                if (error instanceof AxiosError) {
+                    console.log(error)
+                    setErrorRegister(error.response?.data?.error || error.message)
+                } else if (error instanceof Error) {
+                    setErrorRegister(error.message);
+                }
+                setIsOpenAlert(true);
+            }
+        };
+        register()
 
         setTimeout(() => {
             setIsOpenAlert(false)
         }, 5000)
     }
 
+    useEffect(() => {
+        const getMeeting = async () => {
+            try {
+                const data = await getMeetingForId(idMeeting.id)
+                setIsRegister(data.is_registered || false)
+                setInformationMeeting(data);
+            } catch (error) {
+                console.error("Error fetching message:", error);
+            }
+        };
+        getMeeting()
+    }, [idMeeting]);
+
     const handleCloseAlert = () => {
         setIsOpenAlert(false)
     };
 
     const handleClickBroadcast = () => {
-        navigate('/mailShareholder/broadcast')
+        navigate(`/user/meeting/${idMeeting.id}/broadcast`)
     }
 
-    const handleClickVoting = () => {
-        navigate('/mailShareholder/message/voting')
+    const handleClickModalOpen = () => {
+        setIsOpenModal(true);
+        const getUsers = async () => {
+            try {
+                const data = await getAccounts(idMeeting.id)
+                setAccaunts(data.accounts)
+            } catch (error) {
+                console.error("Error fetching message:", error);
+            }
+        };
+        getUsers()
+    }
+
+    const handleClickVoting = (userId: number) => {
+        const id = idMeeting.id
+        navigate(`/user/meeting/${id}/voting/${userId}`, { state: { id, userId } })
+    }
+
+    const handleClickResult = (userId: number, userName: string) => {
+        const id = idMeeting.id
+        navigate(`/user/meeting/${id}/result/${userId}`, { state: { id, userId, userName } })
     }
 
     return (
@@ -34,107 +100,60 @@ export const Message = (): JSX.Element => {
             <h1 className="text-[32px] text-(--color-text) my-7">
                 Сообщение о проведении собрания
             </h1>
-            {isRegister
-                ? <button
-                    className="mb-7
-                                text-2xl
-                                underline
-                                
-                
-                "
-                    disabled
-                >
-                    Регистрация пройдена
-                </button>
-                : <button
-                    className="mb-7
-                                text-2xl
-                                underline
-                                cursor-pointer
-                                hover:text-(--color-red)
-                "
-                    onClick={handleClickRegister}
-                >
-                    Зарегестрироваться на собрание
-                </button>}
-            <div className="flex gap-7 mb-7 text-sm w-[961px]">
-                <Button title='Проголосовать' color='yellow' onClick={() => handleClickVoting()} disabled={!isRegister} />
-                <Button title='Трансляция собрания' color='yellow' onClick={() => handleClickBroadcast()} disabled={!isRegister} />
-            </div>
-            <div className="
-                            w-[1016px] 
-                            p-7 rounded-2xl 
-                            bg-(--color-gray) 
-                            outline-[0.5px] 
-                            outline-(--color-text) 
-                            text-sm 
-                            text-(--color-text)
-                            mb-7
-                            text-justify
-                            ">
-                <div className="flex flex-col items-center mb-3.5">
-                    <div className="font-bold">Сообщение</div>
-                    <div className="w-[331px] text-center">
-                        о проведении годового общего собрания акционеров Акционерного общества «Предприятие №1»
-                    </div>
-                </div>
-                <div className="font-bold mb-3.5 text-center">
-                    УВАЖАЕМЫЙ АКЦИОНЕР!
-                </div>
-                <div className="mb-3.5 indent-3">
-                    В соответствии с решением Совета директоров Акционерного общества «Предприятие №1» (место нахождения Общества: Россия, Свердловская область,
-                    город Екатеринбург ул. 8 марта д. 72) от 21 марта 2024г. уведомляем Вас о проведении  годового общего собрания акционеров
-                    Акционерного общества «Предприятие №1» в форме собрания (совместного присутствия) со следующей повесткой дня:
-                </div>
-                <ol className="mb-8">
-
-                </ol>
-                <div className="mb-3.5 indent-3">
-                    Дата и время проведения годового общего собрания акционеров:
-                    <div className="font-bold">30 april</div>
-                </div>
-                <div className="mb-3.5 flex indent-3">
-                    <div>Место проведения годового общего собрания акционеров:</div>
-                    <div className="font-bold">
-                        Свердловская область, г.Екатеринбург ул.8 марта д.72
-                    </div>
-                </div>
-                <div className="mb-3.5 flex indent-3">
-                    <div>Дата определения (фиксации) лиц, имеющих право на участие в годовом общем собрании акционеров:</div>
-                    <div className="font-bold">
-                        1 april
-                    </div>
-                </div>
-                <div className="mb-3.5 flex indent-3">
-                    <div>Дата, время окончания приёма бюллетеней:</div>
-                    <div className="font-bold">
-                        1 april
-                    </div>
-                </div>
-                <div className="mb-3.5 indent-3">
-                    Информация (материалы) предоставляются для ознакомления лицам, имеющим право на участие в годовом общем собрании
-                    акционеров Общества в сообщении о проведении собрания по ссылке «<u><b>Материалы собрания</b></u>», а также в день
-                    проведения годового общего собрания акционеров по месту и во время его проведения.
-                </div>
-                <div className="mb-7 indent-3 text-(--color-red) font-bold underline cursor-pointer">
-                    Материалы собрания
-                </div>
-                <div className="mb-3.5 indent-3">
-                    Совет директоров АО «Предприятие №1»
-                </div>
-                <div className="flex items-end flex-col">
-                    <div className="mb-3.5 w-[400px]">
-                        Утверждено на заседании Совета Директоров (протокол заседания Совета Директоров от 25.02.2024г)
-                    </div>
-                    <div className="mb-3.5 w-[400px]">
-                        Секретарь Совета Директоров ________________ И.И.Иванов
-                    </div>
-                </div>
-
-            </div>
+            {informationMeeting === undefined ? (<div className="flex justify-center items-center m-auto">
+                <div className="loader"></div>
+            </div>) : <>
+                <MeetingActions
+                    status={informationMeeting.status}
+                    isRegister={isRegister}
+                    onRegisterClick={handleClickRegister}
+                    onVotingClick={handleClickModalOpen}
+                    onBroadcastClick={handleClickBroadcast}
+                    onResultsClick={handleClickModalOpen}
+                    onRecordingClick={() => { }}
+                    meetingURL={informationMeeting.meeting_url}
+                    earlyRegistration={informationMeeting.early_registration}
+                />
+                <MeetingInfo informationMeeting={informationMeeting} nameCompany={getNameCompany(informationMeeting.issuer.short_name || '')} />
+            </>}
             {isOpenAlert &&
-                <Alert message="Регистрация пройдена" onClose={handleCloseAlert} />
+                <Alert
+                    message={errorRegister !== 'Регистрация не разрешена'
+                        ? 'Регистрация уже окончена'
+                        : "Регистрация пройдена"}
+                    onClose={handleCloseAlert}
+                />
             }
+            {isOpenModal &&
+                <Modal onClose={() => setIsOpenModal(false)} visible={isOpenModal}>
+                    <div className="flex flex-col items-center ">
+                        <div className="text-base text-(--color-red) font-bold mb-7">
+                            Выберите аккаунт
+                        </div>
+                        <div className="flex flex-col items-start gap-4 mb-7">
+                            {accaunts?.map((account) => (
+                                <ButtonAccounts
+                                    fullName={account.account_fullname}
+                                    onClick={() => setSelectedAccaunt(account)}
+                                    key={account.account_id}
+                                />
+                            ))}
+
+                        </div>
+                        <ButtonMessageAdmin
+                            title="Выбрать аккаунт"
+                            onClick={() => (
+                                informationMeeting?.status === 5
+                                    ? handleClickResult(selectedAccaunt?.account_id, selectedAccaunt?.account_fullname)
+                                    : handleClickVoting(selectedAccaunt?.account_id)
+                            )
+                            }
+                            isSelected={false}
+                        />
+                    </div>
+                </Modal>
+            }
+
         </div>
     )
 }

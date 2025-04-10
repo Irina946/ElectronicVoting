@@ -18,7 +18,8 @@ const routes: RouteConfig[] = [
     { path: "/user", text: "", pathPrev: "/" },
     { path: "/user/meeting/:meetingID", text: "Сообщение", pathPrev: "/user" },
     { path: "/user/meeting/:meetingID/broadcast", text: "Трансляция собрания", pathPrev: "/user/meeting/:meetingID" },
-    { path: "/user/meeting/:meetingID/voting/:userID", text: "Голосование", pathPrev: "/user/meeting/:meetingID" }
+    { path: "/user/meeting/:meetingID/voting/:userID", text: "Голосование", pathPrev: "/user/meeting/:meetingID" },
+    { path: "/user/meeting/:meetingID/result/:userID", text: "Результаты голосования", pathPrev: "/user/meeting/:meetingID" }
 ];
 
 export const Header = () => {

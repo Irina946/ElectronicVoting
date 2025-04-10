@@ -50,7 +50,8 @@ export const Modal = (props: IModalProps) => {
                             outline-black
                             rounded-2xl
                             p-7
-                            
+                            max-h-[90vh]
+                            overflow-y-auto
                             `}
                 onClick={(e) => e.stopPropagation()}
             >

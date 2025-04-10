@@ -1,13 +1,16 @@
 /* eslint-disable react-refresh/only-export-components */
-import { JSX } from "react";
+import { JSX, useState } from "react";
 import { ButtonMessage } from "../button/buttonMessage";
+import { IMail } from "../../requests/interfaces";
+import { putMeeting } from "../../requests/requests";
+import { AxiosError } from "axios";
+import { Alert } from "../modal/alert";
 
 interface MessageProps {
-    title: string;
     onClick: () => void;
-    date: Date;
-    isRead: boolean;
     type: "outgoing" | "drafts";
+    data: IMail;
+    refreshMessages: () => void;
 }
 
 export const formatedDate = (date: Date): string => {
@@ -15,6 +18,11 @@ export const formatedDate = (date: Date): string => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}.${month}.${year}`
+}
+
+const formatedDateBack = (date: string | null): string => {
+    const arrDate = date?.split('-')
+    return arrDate ? `${arrDate[2]}.${arrDate[1]}.${arrDate[0]}` : ''
 }
 
 export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareholder",): string => {
@@ -38,17 +46,28 @@ export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareh
 }
 
 
-export const Message = (props: MessageProps): JSX.Element => {
-    const { title, onClick, date, isRead, type } = props;
 
-    const circleStyle = () => {
-        if (type === 'outgoing') {
-            return isRead ? 'bg-(--color-green)' : 'bg-(--color-red)';
-        } else if (type === 'drafts') {
-            return 'hidden';
-        }
-        return '';
-    };
+export const Message = (props: MessageProps): JSX.Element => {
+    const { onClick, data, type } = props;
+    const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false)
+
+    const nameCompany = data.issuer.short_name.slice(0, 2) === 'АО' ? data.issuer.short_name.slice(3) : data.issuer.short_name
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        e.stopPropagation()
+        const sendMail = async () => {
+            try {
+                await putMeeting(data.meeting_id)
+                setIsOpenAlert(true)
+                props.refreshMessages()
+            } catch (error) {
+                if (error instanceof AxiosError) {
+                    console.log(error)
+                }
+            }
+        };
+        sendMail()
+    }
 
     return (
         <div
@@ -59,43 +78,41 @@ export const Message = (props: MessageProps): JSX.Element => {
                 pl-[7px]
                 text-(--color-text)
                 cursor-pointer
+                hover:bg-(--color-background)
                 `}
             onClick={onClick}
         >
-            <div className="text-(--color-text) text-[13px] font-bold">
-                {formatedDate(date)}
-            </div>
+            {type === "outgoing" &&
+                <div className="text-(--color-text) text-[13px] font-bold">
+                    {formatedDateBack(data.updated_at)}
+                </div>
+            }
             <div className={`
                                 flex 
                                 items-center 
                                 ${type === 'drafts' ? 'ml-[7px]' : 'ml-[28px]'}
                             `}>
-                <div className={`
-                    w-[13px] 
-                    h-[13px] 
-                    rounded-full
-                    ${circleStyle()}
-                    mr-[7px]
-                    text-(--color-text)
-                    text-base
-                    `}></div>
-                <div className="flex justify-between w-full pr-[14px]">
-                    {formatedText(title, type)}
+                <div className="flex justify-between w-full pr-[14px] items-center mt-[10px]">
+                    <div className="mb-[10px]">
+                        {formatedText(`Сообщение о проведении ${data.annual_or_unscheduled
+                            ? 'Годового'
+                            : 'Внеочередного'} ${data.first_or_repeated
+                                ? ''
+                                : 'повторного'} Общего собрания Акционерного общества ${nameCompany}`, type)}
+                    </div>
                     {type === 'drafts' && (
                         <ButtonMessage
                             title='Отправить сообщение'
                             color='yellow'
                             textSize="text-sm"
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                console.log('ok')
-                            }} />
+                            onClick={(event) => handleClick(event)} />
                     )}
                 </div>
 
             </div>
-
-
+            {isOpenAlert &&
+                <Alert message="Сообщение упесшно отправлено" onClose={() => setIsOpenAlert(false) } />
+}
         </div>
     );
 };

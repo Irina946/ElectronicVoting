@@ -9,6 +9,7 @@ import { Checkbox } from "../checkbox/checkbox";
 import { Input } from "../input/input";
 import ok from "../../assets/arrowCheckbox.svg"
 import { Button } from "../button/button";
+import { IAgendaCreate, IAgendaDetails } from "../../requests/interfaces";
 
 export interface IAgenda {
     number: number;
@@ -21,8 +22,8 @@ export interface IAgenda {
 }
 
 interface IRowProps {
-    agenda: IAgenda | null
-    onChange: (value: IAgenda) => void
+    agenda: IAgendaCreate | null
+    onChange: (value: IAgendaCreate) => void
     onDelete?: (index: number) => void
     index: number
 }
@@ -33,18 +34,20 @@ export const Row = (props: IRowProps) => {
     const [isOpenModal, setIsOpenModal] = useState(false);
     const [isEditing, setIsEditing] = useState(!!agenda);
     const [question, setQuestion] = useState(agenda ? agenda.question : '');
-    const [answer, setAnswer] = useState(agenda ? agenda.solution : '');
-    const [checked, setChecked] = useState(agenda ? agenda.cumulativeVotes : false);
-    const [candidates, setCandidates] = useState(agenda ? agenda.candidates : []);
+    const [answer, setAnswer] = useState(agenda ? agenda.decision : '');
+    const [checked, setChecked] = useState(agenda ? agenda.cumulative : false);
+    const [candidates, setCandidates] = useState<IAgendaDetails[]>(agenda ? agenda.details || [] : []);
     const [materials, setMaterials] = useState<File[]>([]);
+
+    
 
     useEffect(() => {
         if (agenda) {
             setQuestion(agenda.question);
-            setAnswer(agenda.solution);
-            setChecked(agenda.cumulativeVotes);
-            setCandidates(agenda.candidates);
-            setMaterials(agenda.materials);
+            setAnswer(agenda.decision);
+            setChecked(agenda.cumulative);
+            setCandidates(agenda.details || []);
+            // setMaterials(agenda.materials);
         } else {
             setQuestion('');
             setAnswer('');
@@ -70,30 +73,32 @@ export const Row = (props: IRowProps) => {
         }
     }
 
-    const handleChangeCandidate = (candidate: string, index: number) => {
+    const handleChangeCandidate = (detailText: string, index: number) => {
+        if (!candidates) return;
         const newCandidates = [...candidates];
-        newCandidates[index] = candidate;
+        newCandidates[index] = {detail_text: detailText};
         setCandidates(newCandidates);
     }
 
     const onClickAddCanditate = () => {
-        setCandidates([...candidates, ''])
+        if (!candidates) return;
+        setCandidates([...candidates, {detail_text: ''}])
     }
 
     const onClickRemoveCandidate = (index: number) => {
+        if (!candidates) return;
         const newCandidates = candidates.filter((_, i) => i !== index);
         setCandidates(newCandidates);
     };
 
     const handleClickSave = (
     ) => {
-        const newAgenda: IAgenda = {
-            number: index,
-            question,
-            candidates,
-            materials,
-            solution: answer,
-            cumulativeVotes: checked
+        const newAgenda: IAgendaCreate = {
+            question: question,
+            details: candidates,
+            decision: answer,
+            cumulative: checked,
+            questionId: Number(new Date())
         }
         onChange(newAgenda)
         setQuestion('');
@@ -102,6 +107,7 @@ export const Row = (props: IRowProps) => {
         setCandidates([]);
         setMaterials([]);
         setIsOpenModal(false)
+        console.log(materials)
     }
 
     const handleClickEdit = () => {
@@ -125,7 +131,7 @@ export const Row = (props: IRowProps) => {
                             text-left     
                             gap-x-[1px]  
                             bg-white    
-                            mt-[1px]                         
+                            mt-[1px]                        
                             ">
                 <div className="w-[42px] outline-[0.5px] text-center p-[10px]">
                     {
@@ -147,24 +153,24 @@ export const Row = (props: IRowProps) => {
                     }
                 </div>
                 <div className="outline-[0.5px] flex items-center justify-center">
-                    {agenda?.number}
+                    {index}
                 </div>
                 <div className="outline-[0.5px] px-[10px] py-[7px] flex items-center">
                     {agenda?.question}
                 </div>
                 <div className="outline-[0.5px] px-[10px] py-[7px] flex flex-col justify-center ">
-                    {agenda?.candidates.map((candidate, index) => <div key={index}>{candidate}</div>)}
+                    {agenda?.details?.map((candidate, index) => <div key={index}>{candidate.detail_text}</div>)}
                 </div>
                 <div className="outline-[0.5px] px-[10px] py-[7px] flex items-center">
-                    {agenda?.solution}
+                    {agenda?.decision}
                 </div>
                 <div className="outline-[0.5px] px-[10px] py-[7px] flex items-center justify-center">
-                    {agenda?.cumulativeVotes ? <img src={ok} /> : ''}
+                    {agenda?.cumulative ? <img src={ok} /> : ''}
                 </div>
             </div>
             {isOpenModal && (
                 <Modal onClose={handleCloseModal} visible={isOpenModal} type="message">
-                    <div className="w-full text-center text-(--color-red) font-bold text-base">
+                    <div className="w-full text-center text-(--color-red) font-bold text-base overflow-y-scroll h-max-[500px]">
                         Добавить вопрос в повестку дня
                     </div>
                     <div className="grid gap-[28px]">
@@ -183,7 +189,7 @@ export const Row = (props: IRowProps) => {
                                         <img src={minus} />
                                     </button>
                                     <Input
-                                        value={candidate}
+                                        value={candidate.detail_text}
                                         key={index}
                                         placeholder=""
                                         onChange={(value) => handleChangeCandidate(value, index)} />

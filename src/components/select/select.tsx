@@ -1,22 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import arrow from "../../assets/arrowSelect.svg"
 
 export interface Option {
     label: string,
-    value: boolean | string,
+    value: boolean | number,
     repeat?: boolean
 }
 
 interface SelectProps {
     options: Option[],
     placeholder: string,
-    onChange: (value: boolean | string, repeat?: boolean) => void
+    value?: boolean | number;
+    onChange: (value: boolean | number, repeat?: boolean) => void
 }
 
 export const Select = (props: SelectProps) => {
-    const { options, onChange, placeholder } = props
+    const { options, onChange, placeholder, value } = props
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState<Option | null>(null);
+
+    useEffect(() => {
+        if (value !== undefined) {
+            const found = options.find(option => option.value === value);
+            if (found) {
+                setSelectedOption(found);
+            }
+        }
+    }, [value, options]);
 
     const handleToggle = () => {
         setIsOpen(!isOpen);
@@ -72,7 +82,7 @@ export const Select = (props: SelectProps) => {
                                     mb-[-1px]
                                     hover:bg-(--color-yellow-hover)
                             "
-                            >
+                        >
                             {option.label}
                         </li>
                     ))}

@@ -1,60 +1,39 @@
-import { JSX } from "react"
+import { JSX, useEffect, useState } from "react"
 import { RowParticipants } from "../row/rowParticipants"
 import { ButtonParticipants } from "../button/buttonParticipants"
-
-const participants = [
-    {
-        name: "Иванов Иван Иванович",
-        email: "40702810206000000001",
-        id: 556
-    },
-    {
-        name: "Смирнов Алексей Иванович",
-        email: "40702810006000000010",
-        id: 557
-    },
-    {
-        name: "Петров Петр Петрович",
-        email: "40702810306000000011",
-        id: 558
-    },
-    {
-        name: "Олегов Олег Олегович",
-        email: "40702810606000000012",
-        id: 559
-    },
-    {
-        name: "Андреев Андрей Андреевич",
-        email: "40702810906000000013",
-        id: 560
-    },
-    {
-        name: "Степанов Степан Степанович",
-        email: "40702810206000000014",
-        id: 561
-    },
-    {
-        name: "Максимов Максим Максимович",
-        email: "40702810206000000019",
-        id: 562
-    }
-]
+import { getUsersinMeetingAdmin } from "../../requests/requests"
+import { IUsersInMeeting } from "../../requests/interfaces"
 
 interface ParticipantsProps {
-    endDate: Date
+    status: number,
+    idMeeting: number
 }
 
 export const Participants = (props: ParticipantsProps): JSX.Element => {
-    const endDate = props.endDate
-    const nowDate = new Date()
-    const laterDate = endDate.getTime() < nowDate.getTime() ? true : false;
+    const { status, idMeeting } = props
+    const [users, setUsers] = useState<IUsersInMeeting[]>()
+
+    useEffect(() => {
+        const getUsers = async () => {
+            try {
+                const data = await getUsersinMeetingAdmin(idMeeting)
+                setUsers(data);
+            } catch (error) {
+                console.error("Error fetching message:", error);
+            }
+        };
+        getUsers()
+    }, [idMeeting])
+    console.log(users)
 
     return (
         <div>
-            <div className="text-2xl mb-4 text-(--color-red)">
-                Увидеть результаты участников можно после окончания голосования
-            </div>
-            
+            {status !== 5 &&
+                <div className="text-2xl mb-4 text-(--color-red)">
+                    Увидеть результаты участников можно после окончания голосования
+                </div>
+            }
+
             <div className="flex gap-0">
 
                 <div
@@ -94,8 +73,8 @@ export const Participants = (props: ParticipantsProps): JSX.Element => {
                         </div>
                     </div>
                     <div>
-                        {participants.map((participant, idx) => (
-                            <RowParticipants participants={participant} key={idx} isClosed={laterDate} />
+                        {users?.map((user, idx) => (
+                            <RowParticipants participants={user} key={idx} isClosed={status === 5} />
                         ))}
                     </div>
                 </div>

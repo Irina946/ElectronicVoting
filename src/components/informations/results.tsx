@@ -1,8 +1,16 @@
 import { JSX, useEffect, useState, useCallback } from "react";
+import { IAllResultsMeeting } from "../../requests/interfaces";
+import { getMeetingAllResult } from "../../requests/requests";
+import React from "react";
+import { IQuestionWithVote } from "../../pages/results/results";
 import { RowResultOne } from "../rowResult/rowResultOne";
 import { RowResultNotCandidates } from "../rowResult/rowResultNotCandidates";
 import { RowResultCandidates } from "../rowResult/rowResultCandidates";
-import React from "react";
+import { convertToQuestionWithVote } from "../../utils/functions";
+// import { RowResultOne } from "../rowResult/rowResultOne";
+// import { RowResultNotCandidates } from "../rowResult/rowResultNotCandidates";
+// import { RowResultCandidates } from "../rowResult/rowResultCandidates";
+// import React from "react";
 
 interface IResultChecked {
     detailId: number | null;
@@ -19,16 +27,17 @@ export interface IResult {
 
 interface ResultsProps {
     endTime: Date;
+    // status: number;
     onComplete?: () => void;
-    results: IResult[]
+    idMeeting: number
 }
 
 
 
 export const Results = (props: ResultsProps): JSX.Element => {
-    const { endTime, onComplete, results } = props
-
-
+    const { endTime, onComplete, idMeeting } = props
+    const [results, setResults] = useState<IAllResultsMeeting>()
+    const [resultForRow, setResultForRow] = useState<IQuestionWithVote[]>([])
 
     const calculateTimeLeft = useCallback(() => {
         const difference = endTime.getTime() - new Date().getTime();
@@ -38,6 +47,19 @@ export const Results = (props: ResultsProps): JSX.Element => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
     useEffect(() => {
+        const fetchResults = async () => {
+            try {
+                const response = await getMeetingAllResult(idMeeting)
+                setResults(response)
+                setResultForRow(convertToQuestionWithVote(response))
+            }
+            catch (error) {
+                console.log(error)
+            }
+        }
+        if (!timeLeft) {
+            fetchResults()
+        }
         if (timeLeft <= 0) {
             if (onComplete) onComplete();
             return;
@@ -48,7 +70,9 @@ export const Results = (props: ResultsProps): JSX.Element => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeLeft, onComplete, endTime, calculateTimeLeft]);
+    }, [timeLeft, onComplete, endTime, calculateTimeLeft, idMeeting]);
+
+    console.log(results)
 
     const formatTime = (time: number) => {
         const days = Math.floor(time / (3600 * 24));
@@ -94,21 +118,23 @@ export const Results = (props: ResultsProps): JSX.Element => {
                                             text-sm
                                             text-(--color-text)
                                             ">
-                        {results.map((result: IResult, idx: number) => (
-                            <React.Fragment key={result.id}>
+                        {resultForRow.map((question: IQuestionWithVote, idx: number) => (
+
+                            <React.Fragment key={question.question_id}>
                                 {
-                                    result.results.length === 1 && idx === 0 &&
-                                    <RowResultOne result={result} number={idx + 1} key={result.id} />
+                                    question.details.length === 0 && idx === 0 &&
+                                    <RowResultOne question={question} number={idx + 1} key={question.question_id} />
                                 }
                                 {
-                                    result.results.length === 1 && idx !== 0 &&
-                                    <RowResultNotCandidates result={result} number={idx + 1} key={result.id} />
+                                    question.details.length === 0 && idx !== 0 &&
+                                    <RowResultNotCandidates question={question} number={idx + 1} key={question.question_id} />
                                 }
                                 {
-                                    result.results.length !== 1 && idx !== 0 &&
-                                    <RowResultCandidates result={result} number={idx + 1} key={result.id} />
+                                    question.details.length !== 0 && idx !== 0 &&
+                                    <RowResultCandidates question={question} number={idx + 1} key={question.question_id} />
                                 }
                             </React.Fragment>
+
                         ))}
                     </div>
                 </>

@@ -1,14 +1,18 @@
-import { JSX, useState } from "react";
-import { Select } from "../../../components/select/select";
+import { JSX, useEffect, useState } from "react";
+import { Option, Select } from "../../../components/select/select";
 import { Checkbox } from "../../../components/checkbox/checkbox";
 import { InputDate } from "../../../components/input/inputDate";
 import { InputTime } from "../../../components/input/inputTime";
-import { IAgenda, Row } from "../../../components/row/row";
+import { Row } from "../../../components/row/row";
 import { InputFile } from "../../../components/input/inputFile";
 import { Button } from "../../../components/button/button";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { Modal } from "../../../components/modal/modal";
 import { Input } from "../../../components/input/input";
+import { getDraftForId, getListCompany, postMeetingCreate, putDraft } from "../../../requests/requests";
+import { IAgendaCreate, IListCompany, IMeetingCreate } from "../../../requests/interfaces";
+import { HeaderRow } from "../../../components/row/headerRow";
+import { Alert } from "../../../components/modal/alert";
 
 const optionsType = [
     { label: 'Годовое собрание', value: true, repeat: false },
@@ -22,173 +26,316 @@ const optionsPlace = [
     { label: 'Заочное собрание', value: false },
 ]
 
-const optionsIssuer = [
-    { label: 'Акционерное общество “Предприятие №1”', value: 'number 1' },
-    { label: 'Акционерное общество “Предприятие №2”', value: 'number 2' },
-    { label: 'Акционерное общество “Предприятие №3”', value: 'number 3' },
-    { label: 'Акционерное общество “Предприятие №4”', value: 'number 4' },
-    { label: 'Акционерное общество “Предприятие №5”', value: 'number 5' },
-]
-
-const agendaArray: IAgenda[] = [
-    {
-        number: 1,
-        question: 'Избрание Совета директоров Общества.',
-        candidates: [
-            'Иванов Иван Иванович',
-            'Петров Петр Петрович',
-            'Сидоров Сидор Сидорович',
-        ],
-        solution: 'Избрать членов Совета директоров общества следующим составом:',
-        materials: [],
-        cumulativeVotes: true
-    }
-]
-
 const addTimedate = (date: string, time: Date): Date => {
+    if (!(time instanceof Date)) {
+        throw new Error("The 'time' parameter must be a Date object");
+    }
+
     const newDate = new Date(date);
-    newDate.setHours(time.getHours(), time.getMinutes(), 0, 0)
-    return newDate
+    newDate.setHours(time.getHours(), time.getMinutes(), 0, 0);
+    return newDate;
 }
 
+export interface IMeetingUpdate extends IMeetingCreate {
+    meeting_name: string | null;
+    status: number;
+    meeting_url: string | null;
+}
+
+const mapMeetingCreateToFormStateEdit = (data: IMeetingUpdate): IFormState => {
+    return {
+        selectedType: {
+            value: data.annual_or_unscheduled,
+            repeat: data.first_or_repeated
+        },
+        selectedForm: data.inter_or_extra_mural,
+        selectedIssuer: data.issuer,
+        selectedPlace: data.meeting_location,
+        checkedEarlyRegistration: data.early_registration,
+        selectedDateAcceptance: data.decision_date,
+        selectedDateDefinition: data.record_date,
+        selectedDateRegisterStart: data.record_date,
+        selectedDateRegisterEnd: data.deadline_date,
+        selectedTimeRegisterStart: data.checkin,
+        selectedTimeRegisterEnd: data.closeout,
+        selectedDateMeeting: data.meeting_date,
+        selectedTimeMeetingFrom: data.meeting_open,
+        selectedTimeMeetingTo: data.meeting_close,
+        selectedDateReceivingBallotsStart: "",
+        selectedDateReceivingBallotsEnd: "",
+        selectedTimeReceivingBallotsStart: new Date(data.record_date),
+        selectedTimeReceivingBallotsEnd: new Date(),
+        agendas: data.agenda,
+        files: data.file,
+        meeting_name: data.meeting_name,
+        status: data.status,
+        meeting_url: data.meeting_url
+    };
+};
+
+// const mapMeetingCreateToFormState = (data: IMeetingCreate): IFormState => {
+//     return {
+//         selectedType: {
+//             value: data.annual_or_unscheduled,
+//             repeat: data.first_or_repeated
+//         },
+//         selectedForm: data.inter_or_extra_mural,
+//         selectedIssuer: data.issuer,
+//         selectedPlace: data.meeting_location,
+//         checkedEarlyRegistration: data.early_registration,
+//         selectedDateAcceptance: data.decision_date,
+//         selectedDateDefinition: data.record_date,
+//         selectedDateRegisterStart: data.record_date,
+//         selectedDateRegisterEnd: data.deadline_date || "",
+//         selectedTimeRegisterStart: data.checkin,
+//         selectedTimeRegisterEnd: data.closeout,
+//         selectedDateMeeting: data.meeting_date,
+//         selectedTimeMeetingFrom: data.meeting_open,
+//         selectedTimeMeetingTo: data.meeting_close,
+//         selectedDateReceivingBallotsStart: "",
+//         selectedDateReceivingBallotsEnd: "",
+//         selectedTimeReceivingBallotsStart: new Date(data.record_date),
+//         selectedTimeReceivingBallotsEnd: new Date(),
+//         agendas: data.agenda,
+//         files: data.file,
+//     };
+// };
+
+
+interface IFormState {
+    selectedType: { value: boolean | number; repeat?: boolean };
+    selectedForm: boolean | number;
+    selectedIssuer?: number | boolean;
+    selectedPlace: string;
+    checkedEarlyRegistration: boolean;
+    selectedDateAcceptance: string;
+    selectedDateDefinition: string;
+    selectedDateRegisterStart: string;
+    selectedDateRegisterEnd: string;
+    selectedTimeRegisterStart: Date;
+    selectedTimeRegisterEnd: Date;
+    selectedDateMeeting: string;
+    selectedTimeMeetingFrom: Date;
+    selectedTimeMeetingTo: Date;
+    selectedDateReceivingBallotsStart: string;
+    selectedDateReceivingBallotsEnd: string;
+    selectedTimeReceivingBallotsStart: Date;
+    selectedTimeReceivingBallotsEnd: Date;
+    agendas: IAgendaCreate[];
+    files: File[];
+    meeting_name?: string | null;
+    status?: number;
+    meeting_url?: string | null;
+}
+
+const newDate = new Date().toISOString().split('T')[0];
+
+const getTimeFromString = (timeStr: string): Date => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const now = new Date();
+    now.setHours(hours, minutes, 0, 0);
+    return now;
+};
+
+const initialTime = getTimeFromString('14:00');
 
 export const NewMessage = (): JSX.Element => {
-    // const location = useLocation()
-    // const idMessage: {id: number} = location.state
+    const location = useLocation()
+    const idMessage: { id: number } = location.state ? location.state : { id: -1 }
+    const [listCompany, setListCompany] = useState<IListCompany[]>([]);
 
-    const [selectedType, setSelectedType] = useState<{ value: boolean | string, repeat?: boolean }>({ value: false, repeat: false });
-    const [selectedForm, setSelectedForm] = useState<boolean | string>(false);
-    const [selectedIssuer, setSelectedIssuer] = useState<string | boolean>('');
-    const [selectedPlace, setSelectedPlace] = useState<string>('');
-    const [checked, setChecked] = useState(false);
-    const [checkedEarlyRegistration, setCheckedEarlyRegistration] = useState(false);
-    const newDate = new Date();
-    const [selectedDateAcceptance, setSelectedDateAcceptance] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedDateDefinition, setSelectedDateDefinition] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedDateRegisterStart, setSelectedDateRegisterStart] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedDateRegisterEnd, setSelectedDateRegisterEnd] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedTimeRegisterStart, setSelectedTimeRegisterStart] = useState<Date>(() => {
-        const now = new Date();
-        now.setHours(14, 0, 0, 0); // Устанавливаем начальное время 14:00:00.000
-        return now;
-    });
-    const [selectedTimeRegisterEnd, setSelectedTimeRegisterEnd] = useState<Date>(() => {
-        const now = new Date();
-        now.setHours(14, 0, 0, 0); // Устанавливаем начальное время 14:00:00.000
-        return now;
-    });
-    const [selectedDateMeeting, setSelectedDateMeeting] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedTimeMeetingFrom, setSelectedTimeMeetingFrom] = useState<Date>(() => {
-        const now = new Date();
-        now.setHours(14, 0, 0, 0); // Устанавливаем начальное время 14:00:00.000
-        return now;
-    });
-    const [selectedTimeMeetingTo, setSelectedTimeMeetingTo] = useState<Date>(() => {
-        const now = new Date();
-        now.setHours(14, 0, 0, 0); // Устанавливаем начальное время 14:00:00.000
-        return now;
-    });
-    const [selectedDateReceivingBallotsStart, setSelectedDateReceivingBallotsStart] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedDateReceivingBallotsEnd, setSelectedDateReceivingBallotsEnd] = useState(newDate.toISOString().split('T')[0]);
-    const [selectedTimeReceivingBallotsStart, setSelectedTimeReceivingBallotsStart] = useState<Date>(() => {
-        const now = new Date();
-        now.setHours(14, 0, 0, 0); // Устанавливаем начальное время 14:00:00.000
-        return now;
-    });
-    const [selectedTimeReceivingBallotsEnd, setSelectedTimeReceivingBallotsEnd] = useState<Date>(() => {
-        const now = new Date();
-        now.setHours(14, 0, 0, 0); // Устанавливаем начальное время 14:00:00.000
-        return now;
-    });
-    const [agendas, setAgendas] = useState<IAgenda[]>(agendaArray);
-    const [files, setFiles] = useState<File[]>([]);
     const [isOpenModal, setIsOpenModal] = useState(false);
+    const [checked, setChecked] = useState<boolean>(false);
+
+    const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false)
+
+    const [formState, setFormState] = useState<IFormState>({
+        selectedType: { value: false, repeat: false },
+        selectedForm: false,
+        selectedIssuer: undefined,
+        selectedPlace: '',
+        checkedEarlyRegistration: false,
+        selectedDateAcceptance: newDate,
+        selectedDateDefinition: newDate,
+        selectedDateRegisterStart: newDate,
+        selectedDateRegisterEnd: newDate,
+        selectedTimeRegisterStart: initialTime,
+        selectedTimeRegisterEnd: initialTime,
+        selectedDateMeeting: newDate,
+        selectedTimeMeetingFrom: initialTime,
+        selectedTimeMeetingTo: initialTime,
+        selectedDateReceivingBallotsStart: newDate,
+        selectedDateReceivingBallotsEnd: newDate,
+        selectedTimeReceivingBallotsStart: initialTime,
+        selectedTimeReceivingBallotsEnd: initialTime,
+        agendas: [],
+        files: []
+    });
+
+    function updateState<K extends keyof IFormState>(key: K, value: IFormState[K]) {
+        setFormState(prevState => ({
+            ...prevState,
+            [key]: value as IFormState[typeof key]
+        }));
+    }
 
     const navigate = useNavigate();
+    useEffect(() => {
+        if (location.pathname.includes('edit') && idMessage.id !== -1) {
+            const getMeeting = async () => {
+                try {
+                    const data = await getDraftForId(idMessage.id)
+                    setFormState(mapMeetingCreateToFormStateEdit(data))
+                } catch (error) {
+                    console.error("Error fetching message:", error);
+                }
+            };
+            getMeeting()
+        }
+    }, [idMessage.id, location.pathname])
 
     const handleExit = () => {
-        navigate('/generalMeetingShareholders');
+        navigate('/admin');
     }
 
-    const handelNewQuestion = (question: IAgenda) => {
-        setAgendas(prevAgendas => [...prevAgendas, question]);
+    const handelNewQuestion = (question: IAgendaCreate) => {
+        updateState('agendas', [...formState.agendas, { ...question }]);
     }
 
-    const handelDeleteQuestion = (index: number) => {
-        setAgendas(prevAgendas => prevAgendas.filter((_, i) => i !== index));
-    }
+    const handelDeleteQuestion = (uniqueId: number) => {
+        updateState('agendas', formState.agendas.filter(agenda => agenda.questionId !== uniqueId));
+    };
 
-    const handleUpdateQuestion = (updatedQuestion: IAgenda) => {
-        setAgendas(prevAgendas =>
-            prevAgendas.map(agenda =>
-                agenda.number === updatedQuestion.number ? updatedQuestion : agenda
-            )
-        );
-    }
+    const handleUpdateQuestion = (updatedQuestion: IAgendaCreate) => {
+        updateState('agendas', formState.agendas.map(agenda => agenda.questionId === updatedQuestion.questionId ? updatedQuestion : agenda));
+    };
 
     const handleTimeChangeFrom = (hours: number, minutes: number) => {
-        const newDate = new Date(selectedTimeMeetingFrom);
+        const newDate = new Date(formState.selectedTimeMeetingFrom);
         newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        setSelectedTimeMeetingFrom(newDate);
+        updateState('selectedTimeMeetingFrom', newDate);
     };
 
     const handleTimeChangeTo = (hours: number, minutes: number) => {
-        const newDate = new Date(selectedTimeMeetingTo);
+        const newDate = new Date(formState.selectedTimeMeetingTo);
         newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        setSelectedTimeMeetingTo(newDate);
+        updateState('selectedTimeMeetingTo', newDate);
     };
 
     const handleTimeRegisterStartChange = (hours: number, minutes: number) => {
-        const newDate = new Date(selectedTimeRegisterStart);
+        const newDate = new Date(formState.selectedTimeRegisterStart);
         newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        setSelectedTimeRegisterStart(newDate);
+        updateState('selectedTimeRegisterStart', newDate);
     };
 
     const handleTimeRegisterEndChange = (hours: number, minutes: number) => {
-        const newDate = new Date(selectedTimeRegisterEnd);
+        const newDate = new Date(formState.selectedTimeRegisterEnd);
         newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        setSelectedTimeRegisterEnd(newDate);
+        updateState('selectedTimeRegisterEnd', newDate);
     };
 
     const handleTimeReceivingBallotsStart = (hours: number, minutes: number) => {
-        const newDate = new Date(selectedTimeReceivingBallotsStart);
+        const newDate = new Date(formState.selectedTimeReceivingBallotsStart);
         newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        setSelectedTimeReceivingBallotsStart(newDate);
+        updateState('selectedTimeReceivingBallotsStart', newDate);
     }
 
     const handleTimeReceivingBallotsEnd = (hours: number, minutes: number) => {
-        const newDate = new Date(selectedTimeReceivingBallotsEnd);
+        const newDate = new Date(formState.selectedTimeReceivingBallotsEnd);
         newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        setSelectedTimeReceivingBallotsEnd(newDate);
+        updateState('selectedTimeReceivingBallotsEnd', newDate);
     }
 
-    const handleSaveMeeting = () => {
-
-    
-
-        console.log(
-            {
-                issuer_id: selectedIssuer,
-                annual_or_unscheduled: selectedType.value,
-                first_or_repeated: selectedType.repeat,
-                inter_or_extra_mural: selectedForm,
-                meeting_location: selectedPlace,
-                preferred_shares: checked,
-                decision_date: new Date(selectedDateAcceptance),
-                record_date: new Date(selectedDateDefinition),
-                registration_start_date: addTimedate(selectedDateRegisterStart, selectedTimeRegisterStart),
-                registration_end_date: addTimedate(selectedDateRegisterEnd, selectedTimeRegisterEnd),
-                meeting_date_start: addTimedate(selectedDateMeeting, selectedTimeMeetingFrom),
-                meeting_date_close: addTimedate(selectedDateMeeting, selectedTimeMeetingTo ),
-                early_registration: checkedEarlyRegistration,
-                ballots_start_date: addTimedate(selectedDateReceivingBallotsStart, selectedTimeReceivingBallotsStart),
-                ballots_end_date: addTimedate(selectedDateReceivingBallotsEnd, selectedTimeReceivingBallotsEnd),
-                agendas: agendas,
-                materials: files
+    useEffect(() => {
+        const getCompany = async () => {
+            try {
+                const data = await getListCompany();
+                setListCompany(data)
+            } catch (error) {
+                console.error("Error fetching message:", error);
             }
-        );
+        };
+        getCompany()
+
+    }, [])
+
+    const handleSaveMeeting = async () => {
+        const getTime = (time: Date | string): Date => {
+            if (typeof time === 'string') {
+                return new Date(time);  // Преобразуем строку в объект Date
+            }
+            return time;  // Если это уже Date, просто возвращаем его
+        };
+
+        try {
+            if (location.pathname.includes('edit')) {
+                await putDraft(idMessage.id, {
+                    meeting_id: idMessage.id,
+                    issuer: Number(formState.selectedIssuer),
+                    annual_or_unscheduled: formState.selectedType.value as boolean,
+                    first_or_repeated: formState.selectedType.repeat as boolean,
+                    inter_or_extra_mural: formState.selectedForm as boolean,
+                    meeting_location: formState.selectedPlace,
+                    decision_date: formState.selectedDateAcceptance,
+                    record_date: formState.selectedDateDefinition,
+                    checkin: addTimedate(formState.selectedDateRegisterStart, getTime(formState.selectedTimeRegisterStart)),
+                    closeout: addTimedate(formState.selectedDateRegisterEnd, getTime(formState.selectedTimeRegisterEnd)),
+                    meeting_open: addTimedate(formState.selectedDateMeeting, getTime(formState.selectedTimeMeetingFrom)),
+                    meeting_close: addTimedate(formState.selectedDateMeeting, getTime(formState.selectedTimeMeetingTo)),
+                    early_registration: formState.checkedEarlyRegistration,
+                    deadline_date: formState.selectedDateReceivingBallotsEnd || formState.selectedDateMeeting,
+                    agenda: formState.agendas,
+                    file: formState.files,
+                    meeting_date: formState.selectedDateMeeting,
+                    vote_counting: addTimedate(formState.selectedDateReceivingBallotsStart, getTime(formState.selectedTimeReceivingBallotsStart)),
+                    meeting_name: formState.meeting_name || '',
+                    meeting_url: formState.meeting_url || '',
+                    status: formState.status || 1
+                });
+            } else {
+                await postMeetingCreate({
+                    issuer: Number(formState.selectedIssuer),
+                    annual_or_unscheduled: formState.selectedType.value as boolean,
+                    first_or_repeated: formState.selectedType.repeat as boolean,
+                    inter_or_extra_mural: formState.selectedForm as boolean,
+                    meeting_location: formState.selectedPlace,
+                    decision_date: formState.selectedDateAcceptance,
+                    record_date: formState.selectedDateDefinition,
+                    checkin: addTimedate(formState.selectedDateRegisterStart, getTime(formState.selectedTimeRegisterStart)),
+                    closeout: addTimedate(formState.selectedDateRegisterEnd, getTime(formState.selectedTimeRegisterEnd)),
+                    meeting_open: addTimedate(formState.selectedDateMeeting, getTime(formState.selectedTimeMeetingFrom)),
+                    meeting_close: addTimedate(formState.selectedDateMeeting, getTime(formState.selectedTimeMeetingTo)),
+                    early_registration: formState.checkedEarlyRegistration,
+                    deadline_date: formState.selectedDateReceivingBallotsEnd,
+                    agenda: formState.agendas,
+                    file: formState.files,
+                    meeting_date: formState.selectedDateMeeting,
+                    vote_counting: addTimedate(formState.selectedDateReceivingBallotsStart, getTime(formState.selectedTimeReceivingBallotsStart))
+                });
+            }
+
+            // Успешное завершение запроса
+            setIsOpenAlert(true);
+
+        } catch (error) {
+            // Обработка ошибки запроса
+            console.error('Ошибка при сохранении встречи:', error);
+            // Здесь можно также показать уведомление о неудаче
+        }
+    };
+
+
+
+
+
+    const parseListCompanyToOptions = (companies: IListCompany[]): Option[] => {
+        return companies.map(company => ({
+            label: company.full_name,
+            value: company.issuer_id
+        }));
     }
 
+    const newOptions = parseListCompanyToOptions(listCompany);
 
 
     return (
@@ -219,9 +366,10 @@ export const NewMessage = (): JSX.Element => {
                     </div>
                     <div className="w-[424px]">
                         <Select
-                            options={optionsIssuer}
+                            options={newOptions}
                             placeholder="Выберите эмитента"
-                            onChange={(value) => setSelectedIssuer(value)}
+                            onChange={(value) => updateState('selectedIssuer', value)}
+                            value={formState.selectedIssuer}
                         />
                     </div>
                     <div>
@@ -231,7 +379,8 @@ export const NewMessage = (): JSX.Element => {
                         <Select
                             options={optionsType}
                             placeholder="Выберите вид собрания"
-                            onChange={(value, repeat) => setSelectedType({ value, repeat })}
+                            onChange={(value, repeat) => updateState('selectedType', { value, repeat })}
+                            value={formState.selectedType.value}
                         />
                     </div>
                     <div>
@@ -241,14 +390,15 @@ export const NewMessage = (): JSX.Element => {
                         <Select
                             options={optionsPlace}
                             placeholder="Выберите форму собрания"
-                            onChange={(value) => setSelectedForm(value)}
+                            onChange={(value) => updateState('selectedForm', value)}
+                            value={formState.selectedForm}
                         />
                     </div>
                     <div>
                         Место проведения собрания:
                     </div>
                     <div>
-                        <Input value={selectedPlace} onChange={(value) => setSelectedPlace(value)} placeholder="Введите место" />
+                        <Input value={formState.selectedPlace} onChange={(value) => updateState('selectedPlace', value)} placeholder="Введите место" />
                     </div>
                     <div>
                         Наличие права голоса владельцев привилегированных акций:
@@ -261,23 +411,23 @@ export const NewMessage = (): JSX.Element => {
                         Дата принятия решения о созыве собрания:
                     </div>
                     <InputDate
-                        value={selectedDateAcceptance}
-                        onChange={setSelectedDateAcceptance}
+                        value={formState.selectedDateAcceptance}
+                        onChange={(e) => updateState('selectedDateAcceptance', e)}
                     />
                     <div>
                         Дата определения (фиксации) лиц:
                     </div>
                     <InputDate
-                        value={selectedDateDefinition}
-                        onChange={setSelectedDateDefinition}
+                        value={formState.selectedDateDefinition}
+                        onChange={(e) => updateState('selectedDateDefinition', e)}
                     />
                     <div className="flex items-center w-[374px] justify-between">
                         <div>
                             Дата начала регистрации:
                         </div>
                         <InputDate
-                            value={selectedDateRegisterStart}
-                            onChange={setSelectedDateRegisterStart}
+                            value={formState.selectedDateRegisterStart}
+                            onChange={(e) => updateState('selectedDateRegisterStart', e)}
                         />
                     </div>
                     <div className="flex items-center w-[348px] justify-between">
@@ -291,8 +441,8 @@ export const NewMessage = (): JSX.Element => {
                             Дата окончания регистрации:
                         </div>
                         <InputDate
-                            value={selectedDateRegisterEnd}
-                            onChange={setSelectedDateRegisterEnd}
+                            value={formState.selectedDateRegisterEnd}
+                            onChange={(e) => updateState('selectedDateRegisterEnd', e)}
                         />
                     </div>
                     <div className="flex items-center w-[348px] justify-between">
@@ -306,8 +456,8 @@ export const NewMessage = (): JSX.Element => {
                             Дата проведения собрания:
                         </div>
                         <InputDate
-                            value={selectedDateMeeting}
-                            onChange={setSelectedDateMeeting}
+                            value={formState.selectedDateMeeting}
+                            onChange={(e) => updateState('selectedDateMeeting', e)}
                         />
                     </div>
                     <div className="flex items-center w-[348px] justify-between">
@@ -325,19 +475,19 @@ export const NewMessage = (): JSX.Element => {
                             Досрочная регистрация:
                         </div>
                         <Checkbox
-                            checked={checkedEarlyRegistration}
-                            onChange={() => { setCheckedEarlyRegistration(!checkedEarlyRegistration) }}
+                            checked={formState.checkedEarlyRegistration}
+                            onChange={() => updateState('checkedEarlyRegistration', !formState.checkedEarlyRegistration)}
                         />
                     </div>
-                    {checkedEarlyRegistration && <>
+                    {formState.checkedEarlyRegistration && <>
                         <div></div>
                         <div className="flex items-center w-[374px] justify-between">
                             <div>
                                 Дата начала приема бюллетеней:
                             </div>
                             <InputDate
-                                value={selectedDateReceivingBallotsStart}
-                                onChange={setSelectedDateReceivingBallotsStart}
+                                value={formState.selectedDateReceivingBallotsStart}
+                                onChange={(e) => updateState('selectedDateReceivingBallotsStart', e)}
                             />
                         </div>
                         <div className="flex items-center w-[348px] justify-between">
@@ -351,8 +501,8 @@ export const NewMessage = (): JSX.Element => {
                                 Дата окончания приема бюллетеней:
                             </div>
                             <InputDate
-                                value={selectedDateReceivingBallotsEnd}
-                                onChange={setSelectedDateReceivingBallotsEnd}
+                                value={formState.selectedDateReceivingBallotsEnd}
+                                onChange={(e) => updateState('selectedDateReceivingBallotsEnd', e)}
                             />
                         </div>
                         <div className="flex items-center w-[348px] justify-between">
@@ -366,36 +516,8 @@ export const NewMessage = (): JSX.Element => {
                 </div>
                 Повестка дня:
                 <div className="mt-7">
-                    <div className="
-                                    grid 
-                                    grid-cols-[42px_112px_232px_165px_257px_149px] 
-                                    w-[962px] 
-                                    h-[42px]
-                                    align-middle
-                                    text-left     
-                                    gap-x-[1px]  
-                                    bg-white                             
-                                    ">
-                        <div className="w-[42px] h-[42px] outline-[0.5px] ">
-
-                        </div>
-                        <div className="outline-[0.5px] pl-[10px] flex items-center">
-                            Номер вопроса
-                        </div>
-                        <div className="outline-[0.5px] pl-[10px] flex items-center">
-                            Вопрос
-                        </div>
-                        <div className="outline-[0.5px] pl-[10px] flex items-center">
-                            Кандидаты/подвопросы
-                        </div>
-                        <div className="outline-[0.5px] pl-[10px] flex items-center">
-                            Решение
-                        </div>
-                        <div className="outline-[0.5px] pl-[10px] flex items-center">
-                            Кумулятивные голоса
-                        </div>
-                    </div>
-                    {agendas.map((agenda, index) =>
+                    <HeaderRow />
+                    {formState.agendas.map((agenda, index) =>
                         <Row
                             key={index}
                             agenda={agenda}
@@ -405,14 +527,14 @@ export const NewMessage = (): JSX.Element => {
                         />)}
                     <Row
                         agenda={null}
-                        index={agendas.length + 1}
+                        index={formState.agendas.length + 1}
                         onChange={handelNewQuestion}
                         onDelete={handelDeleteQuestion}
                     />
 
                 </div>
                 <div className="mt-7 mb-[7px]">Загрузить материалы:</div>
-                <InputFile onFileSelected={setFiles} />
+                <InputFile onFileSelected={(e) => updateState('files', [...(formState.files || []), e] as File[])} />
                 <div className="flex justify-center items-center mt-7 gap-[275px]">
                     <Button title="Выйти без сохранения" onClick={() => setIsOpenModal(true)} color="empty" />
                     <Button title="Сохранить сообщение" onClick={handleSaveMeeting} color="yellow" />
@@ -429,6 +551,7 @@ export const NewMessage = (): JSX.Element => {
                 </div>
 
             </Modal>}
+            {isOpenAlert && <Alert onClose={() => setIsOpenAlert(false)} message="Сообщение сохранено " />}
         </div>
     )
 }

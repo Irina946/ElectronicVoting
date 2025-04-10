@@ -9,7 +9,7 @@ import { Broadcast } from './pages/user/broadcast/broadcast';
 import { Voting } from './pages/user/voting/voting';
 import { Layout } from './layout';
 import { Authorization } from './pages/authorization/authorization';
-import { ResultUser } from './pages/admin/resultUser/resultUser';
+import { Results } from './pages/results/results';
 
 
 function App() {
@@ -20,13 +20,14 @@ function App() {
                 <Route element={<Layout />}>
                     <Route path='/admin' element={<Mail />} />
                     <Route path='/admin/meeting/:meetingID' element={<MessagePageAdmin />} />
-                    <Route path='/admin/meeting/:meetingID/results/:userID' element={<ResultUser />} />
+                    <Route path='/admin/meeting/:meetingID/results/:userID' element={<Results />} />
                     <Route path='/admin/meeting/new' element={<NewMessage />} />
                     <Route path='/admin/meeting/:meetingID/edit' element={<NewMessage />} />
                     <Route path='/user' element={<MailShareholder />} />
                     <Route path='/user/meeting/:meetingID' element={<Message />} />
                     <Route path='/user/meeting/:meetingID/broadcast' element={<Broadcast />} />
                     <Route path='/user/meeting/:meetingID/voting/:userID' element={<Voting />} />
+                    <Route path='/user/meeting/:meetingID/result/:userID' element={<Results />} />
                 </Route>
 
             </Routes>

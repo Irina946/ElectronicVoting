@@ -2,87 +2,49 @@ import { JSX, useEffect, useState } from "react";
 import { ButtonMessage } from "../../../components/button/buttonMessage";
 import { Message } from "../../../components/message/message";
 import { useNavigate } from "react-router";
+import { IMail } from "../../../requests/interfaces";
+import { getDrafts, getMeetings } from "../../../requests/requests";
 
-const messages = [
-    {
-        id: 2,
-        content: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Предприятия 123»',
-        type: 'outgoing',
-        isRead: false,
-        date: new Date('2025-10-02T12:00:00Z')
-    },
-    {
-        id: 3,
-        content: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Предприятия 123»',
-        type: 'drafts',
-        isRead: true,
-        date: new Date('2025-10-03T12:00:00Z')
-    },
-    {
-        id: 5,
-        content: 'Запрос на предоставление финансовых отчетов',
-        type: 'outgoing',
-        isRead: true,
-        date: new Date('2025-10-05T12:00:00Z')
-    },
-    {
-        id: 7,
-        content: 'Изменение в расписании собраний',
-        type: 'drafts',
-        isRead: false,
-        date: new Date('2025-10-07T12:00:00Z')
-    },
-    {
-        id: 9,
-        content: 'Ответ на запрос о встрече',
-        type: 'outgoing',
-        isRead: false,
-        date: new Date('2025-10-09T12:00:00Z')
-    },
-    {
-        id: 11,
-        content: 'Обновление информации о компании',
-        type: 'drafts',
-        isRead: false,
-        date: new Date('2025-10-11T12:00:00Z')
-    },
-    {
-        id: 13,
-        content: 'Подтверждение изменения данных акционеров',
-        type: 'outgoing',
-        isRead: false,
-        date: new Date('2025-10-13T12:00:00Z')
-    },
-    {
-        id: 15,
-        content: 'Запрос на дополнительные документы',
-        type: 'outgoing',
-        isRead: false,
-        date: new Date('2025-10-15T12:00:00Z')
-    },
-    {
-        id: 17,
-        content: 'Подтверждение получения информации о новых акционерах',
-        type: 'outgoing',
-        isRead: false,
-        date: new Date('2025-10-17T12:00:00Z')
-    },
-];
 export const Mail = (): JSX.Element => {
+
+    const [messages, setMessages] = useState<Array<IMail>>([])
+
     const [currentType, setCurrentType] = useState<'outgoing' | 'drafts'>(() => {
         const savedType = localStorage.getItem('messageType');
+
         return savedType as 'outgoing' | 'drafts' || 'outgoing';
     });
 
+    const refreshMessages = async () => {
+        try {
+            const data = currentType === 'outgoing'
+                ? await getMeetings()
+                : await getDrafts();
+            setMessages(data);
+        } catch (error) {
+            console.error("Error refreshing messages:", error);
+        }
+    };
+
     useEffect(() => {
+        const getMails = async () => {
+            try {
+                const data = currentType === 'outgoing' 
+                ? await getMeetings() 
+                : await getDrafts();
+                setMessages(data);
+            } catch (error) {
+                console.error("Error fetching message:", error);
+            }
+        };
+        getMails()
         localStorage.setItem('messageType', currentType);
     }, [currentType]);
 
     const handleButtonClick = (type: 'outgoing' | 'drafts') => {
         setCurrentType(type);
-    };
 
-    const filteredMessages = messages.filter(message => message.type === currentType);
+    };
 
     const navigate = useNavigate();
 
@@ -91,13 +53,13 @@ export const Mail = (): JSX.Element => {
     }
 
     const handleClickDraft = (id: number) => {
-        navigate(`/admin/meeting/${id}/edit`, {state: {id}});
+        navigate(`/admin/meeting/${id}/edit`, { state: { id } });
     }
 
     const handleClickMessage = (id: number) => {
         navigate(`/admin/meeting/${id}`, { state: { id } });
     }
-    
+
     return (
         <div className="w-[1016px] m-auto">
             <h1 className="text-[32px] text-(--color-text) my-7">Общее собрание акционеров</h1>
@@ -122,20 +84,19 @@ export const Mail = (): JSX.Element => {
                     />
                 </div>
                 <div className="w-[831px] overflow-y-scroll">
-                    {filteredMessages.map((message, index: number) =>
-                        <div key={index} className="border-b-[0.5px] border-(--color-text)">
+                    {messages.map((message) =>
+                        <div key={message.meeting_id} className="border-b-[0.5px] border-(--color-text)">
 
                             <Message
-                                title={message.content}
+                                data={message}
                                 onClick={() =>
                                 (currentType === 'drafts'
-                                    ? handleClickDraft(message.id)
-                                    : handleClickMessage(message.id)
+                                    ? handleClickDraft(message.meeting_id)
+                                    : handleClickMessage(message.meeting_id)
                                 )
                                 }
-                                date={message.date}
-                                isRead={message.isRead}
                                 type={currentType}
+                                refreshMessages={refreshMessages}
                             />
                         </div>
                     )}

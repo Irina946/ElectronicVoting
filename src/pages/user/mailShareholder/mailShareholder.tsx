@@ -1,94 +1,24 @@
-import { JSX } from "react"
+import { JSX, useEffect, useState } from "react"
 import { MessageShareholder } from "../../../components/messageShareholder/messageShareholder"
 import { useNavigate } from "react-router"
-
-
-const messages = [
-    {
-        id: 1,
-        color: 'pink',
-        email: 'AnnaRomanova@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания',
-        isRead: false,
-        date: new Date('2025-12-01T12:00:00Z')
-    },
-    {
-        id: 2,
-        color: 'green',
-        email: 'StepanOlegovich@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: false,
-        date: new Date('2025-11-01T12:00:00Z')
-    },
-    {
-        id: 3,
-        color: 'pink',
-        email: 'AnnaRomanova@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: true,
-        date: new Date('2025-10-30T12:00:00Z')
-    },
-    {
-        id: 4,
-        color: 'blue',
-        email: 'PavelVladislavovich@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: true,
-        date: new Date('2025-10-20T12:00:00Z')
-    },
-    {
-        id: 5,
-        color: 'blue',
-        email: 'PavelVladislavovich@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: false,
-        date: new Date('2025-10-11T12:00:00Z')
-    },
-    {
-        id: 6,
-        color: 'green',
-        email: 'StepanOlegovich@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: true,
-        date: new Date('2025-10-01T12:00:00Z')
-    },
-    {
-        id: 7,
-        color: 'yellow',
-        email: 'MichailVictorovich@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: true,
-        date: new Date('2025-09-22T12:00:00Z')
-    },
-    {
-        id: 8,
-        color: 'red',
-        email: 'MariaFedorovna@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: true,
-        date: new Date('2025-09-01T12:00:00Z')
-    },
-    {
-        id: 9,
-        color: 'yellow',
-        email: 'MichailVictorovich@mail.ru',
-        message: 'Сообщение о проведении годового Общего собрания акционеров Акционерного общества «Представляет',
-        isRead: true,
-        date: new Date('2025-08-22T12:00:00Z')
-    },
-    {
-        id: 10,
-        color: 'red',
-        email: 'MariaFedorovna@mail.ru',
-        message: 'Сообщение о проведении годового Общего',
-        isRead: true,
-        date: new Date('2025-08-01T12:00:00Z')
-    }
-
-]
+import { IMail } from "../../../requests/interfaces"
+import { getMeetings } from "../../../requests/requests"
 
 export const MailShareholder = (): JSX.Element => {
     const navigate = useNavigate();
+    const [messages, setMessages] = useState<Array<IMail>>([])
+
+    useEffect(() => {
+            const getMails = async () => {
+                try {
+                    const data = await getMeetings() 
+                    setMessages(data);
+                } catch (error) {
+                    console.error("Error fetching message:", error);
+                }
+            };
+            getMails()
+        }, []);
 
     const handleClickMessage = (id: number) => {
         navigate(`/user/meeting/${id}`, { state: { id } });
@@ -115,7 +45,7 @@ export const MailShareholder = (): JSX.Element => {
                             "
             >
                 {messages.map((message) =>
-                    <MessageShareholder messageShareholder={message} key={message.id} onClick={() => handleClickMessage(message.id)} />
+                    <MessageShareholder messageShareholder={message} key={message.meeting_id} onClick={() => handleClickMessage(message.meeting_id)} />
                 )}
             </div>
         </div>

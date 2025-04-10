@@ -2,30 +2,40 @@ import { JSX, useState } from "react";
 import { InputAuthorization } from "../../components/input/inputAuthorization";
 import { useNavigate } from "react-router";
 import { login } from "../../auth/auth";
-import { AxiosError } from "axios";
 
 export const Authorization = (): JSX.Element => {
 
     const [isPasswordView, setIsPasswordView] = useState(false)
     const [number, setNumber] = useState('')
     const [password, setPassword] = useState('')
-    const [error, setError] = useState<number | undefined>(undefined)
+    const [error, setError] = useState<string | undefined>(undefined)
     const navigate = useNavigate()
 
-    const handleClickButton = () => {
-        console.log(number, password)
-        login(number, password)
-            .then(() => {
-                navigate('/admin');
-                window.location.reload();
-            },
-                (error: AxiosError) => {
-                    setError(error.response?.status)
+    const handleClickButton = async () => {
+        if (number === '') {
+            setError('Введите номер телефона')
+        }
+        if (password === '') {
+            setError('Введите пароль')
+        }
+        try {
+            const result = await login(number, password); // Ждём результат логина
+
+            if (result.success) {
+                if (result.isStaff) {
+                    navigate('/admin');
+                } else {
+                    navigate('/user');
                 }
-            )
 
+                window.location.reload();
+            } else {
+                setError('Неверный номер телефона или пароль');
+            }
+        } catch (error) {
+            setError(`Ошибка при входе: ${error}`);
+        }
     }
-
 
 
     return (
@@ -52,7 +62,7 @@ export const Authorization = (): JSX.Element => {
                         <circle cx="11.75" cy="6.15002" r="1.25" fill="gray" className="group-hover:fill-gray-300" />
                     </svg>
                 </button>
-            {error ? <div className="text-red-600 text-sm">Неверный номер телефона или пароль</div>  : <></>}
+                {error ? <div className="text-red-600 text-sm">{error}</div> : <></>}
             </div>
             <button
                 className="cursor-pointer self-end mr-[20%] mt-14 border-[5px] border-[#8b8a8a] rounded-[10px] w-[125px] h-16 hover:border-orange-400"

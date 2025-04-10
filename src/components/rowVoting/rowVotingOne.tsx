@@ -1,20 +1,21 @@
 import { JSX, useState } from "react";
-import { IAgenda } from "../row/row";
 import { Checkbox } from "../checkbox/checkbox";
+import { IAgenda } from "../../requests/interfaces";
 
 interface RowVotingProps {
+    numberQuestion: number,
     agenda: IAgenda,
     onVoteChange: (agendaNumber: number, vote: string) => void;
 }
 
 export const RowVotingOne = (props: RowVotingProps): JSX.Element => {
-    const {agenda, onVoteChange} = props
+    const {agenda, onVoteChange, numberQuestion} = props
 
     const [selectedVote, setSelectedVote] = useState<string | null>(null);
 
     const handleVoteChange = (vote: string) => {
         setSelectedVote(vote);
-        onVoteChange(agenda.number, vote)
+        onVoteChange(agenda.question_id, vote)
     }
 
     return (
@@ -27,23 +28,23 @@ export const RowVotingOne = (props: RowVotingProps): JSX.Element => {
                             grid-cols-[36px_532px_133px_133px_126px]
                             mb-[-1px]
                             "
-                key={agenda.number}
+                key={agenda.question_id}
             >
                 <div className="px-3.5 border-r-[0.5px] flex items-center justify-center">
-                    {agenda.number}
+                    {numberQuestion}
                 </div>
                 <div className="p-3.5 border-r-[0.5px]">
                     <div className="mb-3.5 ">
-                        {agenda.materials.map((material) => (
+                        {/* {agenda.materials.map((material) => (
                             material.name
-                        ))}
+                        ))} */}
                     </div>
                     <div className="flex flex-col gap-[7px]">
                         <div>
                             Вопрос: {agenda.question}
                         </div>
                         <div>
-                            Решение: {agenda.solution}
+                            Решение: {agenda.decision}
                         </div>
                     </div>
                 </div>

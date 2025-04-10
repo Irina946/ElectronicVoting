@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface InputProps {
     placeholder: string;
@@ -16,6 +16,10 @@ export const Input = (props: InputProps) => {
         setValueInput(newValue);
         onChange(newValue);
     }
+
+    useEffect(() => {
+        setValueInput(value);
+    }, [value]);
 
     return <input
         type="text"

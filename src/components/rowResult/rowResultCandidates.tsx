@@ -1,14 +1,14 @@
 import { JSX } from "react";
 import styles from "./rowVoting.module.css";
-import { IResult } from "../informations/results";
+import { IQuestionWithVote } from "../../pages/results/results";
 
 interface RowResultProps {
-    result: IResult,
+    question: IQuestionWithVote,
     number: number
 }
 
 export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
-    const { result, number } = props
+    const { question, number } = props
 
     return (
         <div>
@@ -16,7 +16,6 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                             bg-white
                             ${styles.border}
                             `}
-                key={result.id}
             >
                 <div className="
                             grid
@@ -28,10 +27,10 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                     <div className="p-3.5 border-r-[0.5px]">
                         <div className="flex flex-col gap-[7px]">
                             <div>
-                                Вопрос:
+                                Вопрос: {question.question}
                             </div>
                             <div>
-                                Решение:
+                                Решение: {question.decision}
                             </div>
                         </div>
                     </div>
@@ -42,18 +41,19 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                     <div className="flex items-center justify-center py-5">
                     </div>
                 </div>
+                {question.vote !== undefined ? 
                 <div>
-                    {result.results.map((res, idx) => (
+                    {question.vote.map((res, idx) => (
                         <div className={`
                             grid
                             grid-cols-[36px_531px_133px_133px_126px]
                             `}
-                            key={res.detailId}
+                            key={res.DetailId}
                         >
                             <div className="px-3.5 border-r-[1px] flex items-center justify-center">
                             </div>
                             <div className={`py-3.5 px-12 ${styles.borderTop}`}>
-                                Кандидат
+                                {question.details[idx].detail_text}
                             </div>
                             <div className={`
                                             ${styles.borderTop} 
@@ -63,7 +63,7 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                                             items-center 
                                             justify-center
                                             `}>
-                                {res.for}
+                                {res.For?.Quantity}
                             </div>
                             <div className={`
                                             ${styles.borderTop} 
@@ -76,7 +76,7 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                                             items-center 
                                             justify-center
                                             `}>
-                                {res.against}
+                                {res.Against?.Quantity}
                             </div>
                             <div className={`
                                             flex 
@@ -89,11 +89,11 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                                             border-l-black 
                                             ${idx === 0 ? 'border-t-[1px]' : ''}
                                             `}>
-                                {res.abstain}
+                                {res.Abstain?.Quantity}
                             </div>
                         </div>
                     ))}
-                </div>
+                </div> : <></>}
             </div>
         </div >
     )

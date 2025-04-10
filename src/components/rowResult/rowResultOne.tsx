@@ -1,13 +1,13 @@
 import { JSX } from "react";
-import { IResult } from "../informations/results";
+import { IQuestionWithVote } from "../../pages/results/results";
 
 interface RowResultProps {
-    result: IResult,
+    question: IQuestionWithVote,
     number: number
 }
 
 export const RowResultOne = (props: RowResultProps): JSX.Element => {
-    const { result, number } = props
+    const { question, number } = props
 
     return (
         <div>
@@ -19,7 +19,6 @@ export const RowResultOne = (props: RowResultProps): JSX.Element => {
                             grid-cols-[36px_532px_133px_133px_126px]
                             mb-[-1px]
                             "
-                key={result.id}
             >
                 <div className="px-3.5 border-r-[0.5px] flex items-center justify-center">
                     {number}
@@ -27,10 +26,10 @@ export const RowResultOne = (props: RowResultProps): JSX.Element => {
                 <div className="p-3.5 border-r-[0.5px]">
                     <div className="flex flex-col gap-[7px]">
                         <div>
-                            Вопрос:
+                            Вопрос: {question.question}
                         </div>
                         <div>
-                            Решение:
+                            Решение: {question.decision}
                         </div>
                     </div>
                 </div>
@@ -39,7 +38,7 @@ export const RowResultOne = (props: RowResultProps): JSX.Element => {
                         ЗА
                     </div>
                     <div className="flex items-center justify-center py-5">
-                        {result.results.map((res) => res.for)}
+                        {question.vote !== undefined ? question.vote.map((res) => res.For?.Quantity) : '0'}
                     </div>
                 </div>
                 <div className="border-r-[0.5px]">
@@ -47,7 +46,7 @@ export const RowResultOne = (props: RowResultProps): JSX.Element => {
                         ПРОТИВ
                     </div>
                     <div className="flex items-center justify-center py-5">
-                        {result.results.map((res) => res.against)}
+                        {question.vote !== undefined ? question.vote.map((res) => res.Against?.Quantity) : '0'}
                     </div>
                 </div>
                 <div>
@@ -55,7 +54,7 @@ export const RowResultOne = (props: RowResultProps): JSX.Element => {
                         ВОЗДЕРЖАЛСЯ
                     </div>
                     <div className="flex items-center justify-center py-5">
-                        {result.results.map((res) => res.abstain)}
+                        {question.vote !== undefined ? question.vote.map((res) => res.Abstain?.Quantity) : '0'}
                     </div>
                 </div>
             </div>

@@ -8,9 +8,15 @@ interface InputDateProps {
     onChange: (value: string) => void;
 }
 
-const formatedDate = (date: string): string => {
-    const arrayDate = date.split('-');
-    return `${arrayDate[2]}.${arrayDate[1]}.${arrayDate[0]}`
+const formatedDate = (value: string): string => {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return ''; // некорректная дата
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}.${month}.${year}`;
 }
 
 export const InputDate = (props: InputDateProps): JSX.Element => {
@@ -37,7 +43,7 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
     ];;
 
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-    const [currentDate, setCurrentDate] = useState(new Date());
+    const [currentDate, setCurrentDate] = useState(new Date(value));
     const calendarRef = useRef<HTMLDivElement | null>(null);
 
     const handleDateChange = (date: Date) => {
@@ -100,6 +106,13 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    useEffect(() => {
+        const parsed = new Date(value);
+        if (!isNaN(parsed.getTime())) {
+            setCurrentDate(parsed);
+        }
+    }, [value]);
 
     const handleDateLastMonth = (date: Date) => {
         handleDateChange(date);

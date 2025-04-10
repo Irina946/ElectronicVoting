@@ -6,35 +6,24 @@ interface InputProps {
     onChange: (value: string) => void;
     label: string;
     error?: string;
-    
+
 }
 
 export const InputAuthorization = (props: InputProps): JSX.Element => {
     const { value, onChange, type, label, error } = props
 
-    const [valueInput, setValueInput] = useState(value);
-    const [errorState, setErrorState] = useState(error || '');
+    const [valueInput, setValueInput] = useState(value)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = event.target.value;
+
+        // if (type === 'text' && !newValue.startsWith('+7')) {
+        //     newValue = '+7' + newValue.replace('+7', '');
+        // }
+
         setValueInput(newValue);
         onChange(newValue);
     };
-
-    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-        const newValue = event.target.value;
-
-        if (type === 'text') {
-            // Проверка формата номера телефона
-            const phoneRegex = /^\+7\d{10}$/;
-            if (!phoneRegex.test(newValue)) {
-                setErrorState('Номер телефона должен быть в формате +79999999999');
-            } else {
-                setErrorState('');
-            }
-        }
-    };
-
 
     return <label className="w-[90%] flex flex-col gap-9 text-base font-medium text-black">
         {label}
@@ -51,10 +40,9 @@ export const InputAuthorization = (props: InputProps): JSX.Element => {
                 py-[0.5vw]
                 px-[1vw]
                 mb-9
-                ${errorState ? 'border-red-500' : ''}`}
+                ${error ? 'border-red-500' : ''}`}
             required
-            onBlur={handleBlur}
         />
-        {errorState && <p className="text-red-600 text-sm -mt-15 mb-1">{errorState}</p>}
+        {error && <p className="text-red-600 text-sm -mt-15 mb-1">{error}</p>}
     </label>
 };
