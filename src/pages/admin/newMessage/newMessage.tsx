@@ -206,8 +206,10 @@ export const NewMessage = (): JSX.Element => {
         updateState('agendas', formState.agendas.filter(agenda => agenda.questionId !== uniqueId));
     };
 
-    const handleUpdateQuestion = (updatedQuestion: IAgendaCreate) => {
-        updateState('agendas', formState.agendas.map(agenda => agenda.questionId === updatedQuestion.questionId ? updatedQuestion : agenda));
+    const handleUpdateQuestion = (updatedQuestion: IAgendaCreate, index: number) => {
+        const newAgendas = [...formState.agendas];
+        newAgendas[index] = updatedQuestion;
+        updateState('agendas', newAgendas);
     };
 
     const handleTimeChangeFrom = (hours: number, minutes: number) => {

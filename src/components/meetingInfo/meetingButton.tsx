@@ -40,11 +40,9 @@ const MeetingActions: React.FC<MeetingActionsProps> = ({
         }
     };
 
-    console.log(meetingURL)
-
     return (
         <div>
-            {earlyRegistration === null || !earlyRegistration ?
+            {status !== 3 && (earlyRegistration === null || !earlyRegistration) ?
                 <button
                     className="mb-7 text-2xl underline"
                     disabled={true}

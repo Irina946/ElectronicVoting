@@ -18,12 +18,12 @@ export interface IAgenda {
     materials: File[];
     solution: string;
     cumulativeVotes: boolean;
-
+    index: number
 }
 
 interface IRowProps {
     agenda: IAgendaCreate | null
-    onChange: (value: IAgendaCreate) => void
+    onChange: (value: IAgendaCreate, index: number) => void
     onDelete?: (index: number) => void
     index: number
 }
@@ -100,7 +100,7 @@ export const Row = (props: IRowProps) => {
             cumulative: checked,
             questionId: Number(new Date())
         }
-        onChange(newAgenda)
+        onChange(newAgenda, index - 1)
         setQuestion('');
         setAnswer('');
         setChecked(false);

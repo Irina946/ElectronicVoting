@@ -6,20 +6,23 @@ interface InputProps {
     onChange: (value: string) => void;
     label: string;
     error?: string;
-
+    fieldType?: 'login' | 'password';
 }
 
+
 export const InputAuthorization = (props: InputProps): JSX.Element => {
-    const { value, onChange, type, label, error } = props
+    const { value, onChange, type, label, error, fieldType } = props
 
     const [valueInput, setValueInput] = useState(value)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = event.target.value;
+        let newValue = event.target.value;
 
-        // if (type === 'text' && !newValue.startsWith('+7')) {
-        //     newValue = '+7' + newValue.replace('+7', '');
-        // }
+        if (fieldType === 'login') {
+            if (/^\d+$/.test(newValue) && !newValue.startsWith('+7')) {
+                newValue = '+7' + newValue;
+            }
+        }
 
         setValueInput(newValue);
         onChange(newValue);
