@@ -1,4 +1,4 @@
-import { IMeetingUpdate } from "../pages/admin/newMessage/newMessage"
+import { IMeetingUpdate } from "../utils/interfaces"
 
 export interface IMail {
     meeting_id: number,

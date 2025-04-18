@@ -1,6 +1,6 @@
 import axios from "axios";
 import { IAccauntsInMeeting, IAllResultsMeeting, IListCompany, IMail, IMeeting, IMeetingCreate, IMeetingUsers, IPutDrafts, IResultsMeeting, IUsersInMeeting, VoteDtls } from "./interfaces";
-import { IMeetingUpdate } from "../pages/admin/newMessage/newMessage";
+import { IMeetingUpdate } from "../utils/interfaces";
 
 const API_URL = "http://localhost:8000/";
 
