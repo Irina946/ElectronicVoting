@@ -28,10 +28,10 @@
 ```
 ELECTRONIC_VOTING (React + TypeScript, Vite)
 │
-├── public/ - Статические ресурсы
+├── public/                # Статические ресурсы
 │
-├── src/ - Корневая папка с кодом             
-│   ├── assets/ - Графика
+├── src/                   # Корневая папка с кодом             
+│   ├── assets/            # Графика
 │   ├── auth/              # Модуль аутентификации
 │   ├── components/        # UI-компоненты
 │   ├── pages/             # Страницы приложения
@@ -40,10 +40,10 @@ ELECTRONIC_VOTING (React + TypeScript, Vite)
 │   ├── App.tsx            # Корневой компонент
 │   ├── main.tsx           # Точка входа
 │   └── layout.tsx         # Общий макет
-├── .gitignore            # Игнорируемые файлы
-├── package.json          # Зависимости и скрипты
-├── tsconfig.json         # Настройки TypeScript
-└── vite.config.ts        # Конфигурация Vite
+├── .gitignore             # Игнорируемые файлы
+├── package.json           # Зависимости и скрипты
+├── tsconfig.json          # Настройки TypeScript
+└── vite.config.ts         # Конфигурация Vite
 ```
 
 ## Установка проекта
