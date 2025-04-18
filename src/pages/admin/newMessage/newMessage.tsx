@@ -69,38 +69,9 @@ const mapMeetingCreateToFormStateEdit = (data: IMeetingUpdate): IFormState => {
         files: data.file,
         meeting_name: data.meeting_name,
         status: data.status,
-        meeting_url: data.meeting_url
+        meeting_url: data.meeting_url,
     };
 };
-
-// const mapMeetingCreateToFormState = (data: IMeetingCreate): IFormState => {
-//     return {
-//         selectedType: {
-//             value: data.annual_or_unscheduled,
-//             repeat: data.first_or_repeated
-//         },
-//         selectedForm: data.inter_or_extra_mural,
-//         selectedIssuer: data.issuer,
-//         selectedPlace: data.meeting_location,
-//         checkedEarlyRegistration: data.early_registration,
-//         selectedDateAcceptance: data.decision_date,
-//         selectedDateDefinition: data.record_date,
-//         selectedDateRegisterStart: data.record_date,
-//         selectedDateRegisterEnd: data.deadline_date || "",
-//         selectedTimeRegisterStart: data.checkin,
-//         selectedTimeRegisterEnd: data.closeout,
-//         selectedDateMeeting: data.meeting_date,
-//         selectedTimeMeetingFrom: data.meeting_open,
-//         selectedTimeMeetingTo: data.meeting_close,
-//         selectedDateReceivingBallotsStart: "",
-//         selectedDateReceivingBallotsEnd: "",
-//         selectedTimeReceivingBallotsStart: new Date(data.record_date),
-//         selectedTimeReceivingBallotsEnd: new Date(),
-//         agendas: data.agenda,
-//         files: data.file,
-//     };
-// };
-
 
 interface IFormState {
     selectedType: { value: boolean | number; repeat?: boolean };
@@ -171,6 +142,7 @@ export const NewMessage = (): JSX.Element => {
         agendas: [],
         files: []
     });
+    
 
     function updateState<K extends keyof IFormState>(key: K, value: IFormState[K]) {
         setFormState(prevState => ({
@@ -203,6 +175,7 @@ export const NewMessage = (): JSX.Element => {
     }
 
     const handelDeleteQuestion = (uniqueId: number) => {
+        
         updateState('agendas', formState.agendas.filter(agenda => agenda.questionId !== uniqueId));
     };
 
@@ -236,18 +209,6 @@ export const NewMessage = (): JSX.Element => {
         updateState('selectedTimeRegisterEnd', newDate);
     };
 
-    const handleTimeReceivingBallotsStart = (hours: number, minutes: number) => {
-        const newDate = new Date(formState.selectedTimeReceivingBallotsStart);
-        newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        updateState('selectedTimeReceivingBallotsStart', newDate);
-    }
-
-    const handleTimeReceivingBallotsEnd = (hours: number, minutes: number) => {
-        const newDate = new Date(formState.selectedTimeReceivingBallotsEnd);
-        newDate.setHours(hours, minutes, 0, 0); // Устанавливаем новые часы и минуты
-        updateState('selectedTimeReceivingBallotsEnd', newDate);
-    }
-
     useEffect(() => {
         const getCompany = async () => {
             try {
@@ -264,9 +225,9 @@ export const NewMessage = (): JSX.Element => {
     const handleSaveMeeting = async () => {
         const getTime = (time: Date | string): Date => {
             if (typeof time === 'string') {
-                return new Date(time);  // Преобразуем строку в объект Date
+                return new Date(time)
             }
-            return time;  // Если это уже Date, просто возвращаем его
+            return time;
         };
 
         try {
@@ -315,14 +276,10 @@ export const NewMessage = (): JSX.Element => {
                     vote_counting: addTimedate(formState.selectedDateReceivingBallotsStart, getTime(formState.selectedTimeReceivingBallotsStart))
                 });
             }
-
-            // Успешное завершение запроса
             setIsOpenAlert(true);
 
         } catch (error) {
-            // Обработка ошибки запроса
             console.error('Ошибка при сохранении встречи:', error);
-            // Здесь можно также показать уведомление о неудаче
         }
     };
 
@@ -481,39 +438,6 @@ export const NewMessage = (): JSX.Element => {
                             onChange={() => updateState('checkedEarlyRegistration', !formState.checkedEarlyRegistration)}
                         />
                     </div>
-                    {formState.checkedEarlyRegistration && <>
-                        <div></div>
-                        <div className="flex items-center w-[374px] justify-between">
-                            <div>
-                                Дата начала приема бюллетеней:
-                            </div>
-                            <InputDate
-                                value={formState.selectedDateReceivingBallotsStart}
-                                onChange={(e) => updateState('selectedDateReceivingBallotsStart', e)}
-                            />
-                        </div>
-                        <div className="flex items-center w-[348px] justify-between">
-                            <div >
-                                Время начала приема бюллетеней:
-                            </div>
-                            <InputTime onTimeChange={handleTimeReceivingBallotsStart} />
-                        </div>
-                        <div className="flex items-center w-[374px] justify-between">
-                            <div>
-                                Дата окончания приема бюллетеней:
-                            </div>
-                            <InputDate
-                                value={formState.selectedDateReceivingBallotsEnd}
-                                onChange={(e) => updateState('selectedDateReceivingBallotsEnd', e)}
-                            />
-                        </div>
-                        <div className="flex items-center w-[348px] justify-between">
-                            <div>
-                                Время окончания приема бюллетеней:
-                            </div>
-                            <InputTime onTimeChange={handleTimeReceivingBallotsEnd} />
-                        </div>
-                    </>}
 
                 </div>
                 Повестка дня:
@@ -521,11 +445,11 @@ export const NewMessage = (): JSX.Element => {
                     <HeaderRow />
                     {formState.agendas.map((agenda, index) =>
                         <Row
-                            key={index}
+                            key={index + 1}
                             agenda={agenda}
                             index={index + 1}
                             onChange={handleUpdateQuestion}
-                            onDelete={handelDeleteQuestion}
+                            onDelete={() => handelDeleteQuestion(index)}
                         />)}
                     <Row
                         agenda={null}
@@ -545,7 +469,7 @@ export const NewMessage = (): JSX.Element => {
             {isOpenModal && <Modal onClose={() => setIsOpenModal(false)} visible={isOpenModal} type="warning">
                 <div className="flex items-center flex-col text-(--color-text) text-lg">
                     <p className="mb-[7px]">Вы уверены, что хотите выйти из раздела создания сообщения?</p>
-                    <p>Все несохранённые данные удалятся!</p>
+                    <p>Все не сохранённые данные удалятся!</p>
                     <div className="mt-14 flex gap-16">
                         <Button title="Продолжить" onClick={() => setIsOpenModal(false)} color="empty" />
                         <Button title="Выйти без сохранения" onClick={handleExit} color="empty" />

@@ -58,9 +58,6 @@ export const Voting = (): JSX.Element => {
 
     const votesCount = informations ? informations?.vote_count.VoteDtls.VoteInstrForAgndRsltn[0].Quantity : 0
 
-   
-
-
     return (
         <>
             {informations === undefined

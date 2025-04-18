@@ -24,7 +24,6 @@ export const Participants = (props: ParticipantsProps): JSX.Element => {
         };
         getUsers()
     }, [idMeeting])
-    console.log(users)
 
     return (
         <div>

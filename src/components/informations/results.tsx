@@ -1,5 +1,4 @@
 import { JSX, useEffect, useState, useCallback } from "react";
-import { IAllResultsMeeting } from "../../requests/interfaces";
 import { getMeetingAllResult } from "../../requests/requests";
 import React from "react";
 import { IQuestionWithVote } from "../../pages/results/results";
@@ -7,10 +6,7 @@ import { RowResultOne } from "../rowResult/rowResultOne";
 import { RowResultNotCandidates } from "../rowResult/rowResultNotCandidates";
 import { RowResultCandidates } from "../rowResult/rowResultCandidates";
 import { convertToQuestionWithVote } from "../../utils/functions";
-// import { RowResultOne } from "../rowResult/rowResultOne";
-// import { RowResultNotCandidates } from "../rowResult/rowResultNotCandidates";
-// import { RowResultCandidates } from "../rowResult/rowResultCandidates";
-// import React from "react";
+
 
 interface IResultChecked {
     detailId: number | null;
@@ -36,7 +32,6 @@ interface ResultsProps {
 
 export const Results = (props: ResultsProps): JSX.Element => {
     const { endTime, onComplete, idMeeting } = props
-    const [results, setResults] = useState<IAllResultsMeeting>()
     const [resultForRow, setResultForRow] = useState<IQuestionWithVote[]>([])
 
     const calculateTimeLeft = useCallback(() => {
@@ -50,7 +45,6 @@ export const Results = (props: ResultsProps): JSX.Element => {
         const fetchResults = async () => {
             try {
                 const response = await getMeetingAllResult(idMeeting)
-                setResults(response)
                 setResultForRow(convertToQuestionWithVote(response))
             }
             catch (error) {
@@ -72,7 +66,6 @@ export const Results = (props: ResultsProps): JSX.Element => {
         return () => clearInterval(timer);
     }, [timeLeft, onComplete, endTime, calculateTimeLeft, idMeeting]);
 
-    console.log(results)
 
     const formatTime = (time: number) => {
         const days = Math.floor(time / (3600 * 24));

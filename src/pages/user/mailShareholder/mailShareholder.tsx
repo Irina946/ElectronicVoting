@@ -9,16 +9,16 @@ export const MailShareholder = (): JSX.Element => {
     const [messages, setMessages] = useState<Array<IMail>>([])
 
     useEffect(() => {
-            const getMails = async () => {
-                try {
-                    const data = await getMeetings() 
-                    setMessages(data);
-                } catch (error) {
-                    console.error("Error fetching message:", error);
-                }
-            };
-            getMails()
-        }, []);
+        const getMails = async () => {
+            try {
+                const data = await getMeetings()
+                setMessages(data);
+            } catch (error) {
+                console.error("Error fetching message:", error);
+            }
+        };
+        getMails()
+    }, []);
 
     const handleClickMessage = (id: number) => {
         navigate(`/user/meeting/${id}`, { state: { id } });
@@ -29,7 +29,7 @@ export const MailShareholder = (): JSX.Element => {
             <h1 className="text-[32px] text-(--color-text) my-7">
                 Общее собрание акционеров
             </h1>
-            
+
             <div className="
                             flex 
                             gap-[5px] 
@@ -44,8 +44,12 @@ export const MailShareholder = (): JSX.Element => {
                             overflow-y-scroll
                             "
             >
-                {messages.map((message) =>
-                    <MessageShareholder messageShareholder={message} key={message.meeting_id} onClick={() => handleClickMessage(message.meeting_id)} />
+                {messages.slice().reverse().map((message) =>
+                    <MessageShareholder
+                        messageShareholder={message}
+                        key={message.meeting_id}
+                        onClick={() => handleClickMessage(message.meeting_id)}
+                    />
                 )}
             </div>
         </div>

@@ -92,12 +92,13 @@ export interface IAgendaDetails {
     detail_text: string
 }
 
+
 export interface IAgendaCreate {
     questionId: number,
     question: string,
     decision: string,
     cumulative: boolean,
-    details?: IAgendaDetails[]
+    details?: IAgendaDetails[],
 }
 
 export interface IMeetingCreate {

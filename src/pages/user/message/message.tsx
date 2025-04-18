@@ -128,7 +128,7 @@ export const Message = (): JSX.Element => {
                 <Modal onClose={() => setIsOpenModal(false)} visible={isOpenModal}>
                     <div className="flex flex-col items-center ">
                         <div className="text-base text-(--color-red) font-bold mb-7">
-                            Выберите аккаунт
+                            Выберите лицевой счет
                         </div>
                         <div className="flex flex-col items-start gap-4 mb-7">
                             {accaunts?.map((account) => (
@@ -141,7 +141,7 @@ export const Message = (): JSX.Element => {
 
                         </div>
                         <ButtonMessageAdmin
-                            title="Выбрать аккаунт"
+                            title="Выбрать"
                             onClick={() => (
                                 informationMeeting?.status === 5
                                     ? handleClickResult(selectedAccaunt?.account_id, selectedAccaunt?.account_fullname)

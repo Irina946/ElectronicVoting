@@ -26,11 +26,11 @@ const MeetingActions: React.FC<MeetingActionsProps> = ({
     const getStatusText = (status: number) => {
         switch (status) {
             case 1:
-                return "Регистрация ожидается";
+                return "Регистрация запрещена";
             case 2:
-                return "Разрешена регистрация";
+                return "Зарегестрироваться";
             case 3:
-                return "Разрешено голосование";
+                return "Зарегестрироваться";
             case 4:
                 return "Голосование завершено";
             case 5:
@@ -47,7 +47,7 @@ const MeetingActions: React.FC<MeetingActionsProps> = ({
                     className="mb-7 text-2xl underline"
                     disabled={true}
                 >
-                    Досрочная решистрация запрещена
+                    Досрочная регистрация запрещена
                 </button>
                 :
                 <button
@@ -55,7 +55,7 @@ const MeetingActions: React.FC<MeetingActionsProps> = ({
                     onClick={onRegisterClick}
                     disabled={(status !== 2 && status !== 3) || isRegister}
                 >
-                    {getStatusText(status)}
+                    {isRegister ? "Вы зарегистрированы" : getStatusText(status)}
                 </button>
             }
             {/* Действия в зависимости от статуса */}

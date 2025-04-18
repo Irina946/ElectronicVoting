@@ -2,17 +2,15 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8000/api/token/";
 
-let accessToken: string | null = null;
+const refresh = JSON.parse(localStorage.getItem("refresh")!)
 
-// --- Авторизация ---
 export const login = async (username: string, password: string) => {
     try {
         const response = await axios.post(API_URL, { username, password });
-        const { access, refresh, is_staff } = response.data || {};
 
-        if (access && refresh && typeof is_staff !== "undefined") {
-            // Храним только refresh в localStorage, access — в памяти
-            accessToken = access;
+        const { access, refresh, is_staff } = response.data || {};
+        if (access && refresh !== undefined && is_staff !== undefined) {
+            localStorage.setItem("user", JSON.stringify(access));
             localStorage.setItem("refresh", JSON.stringify(refresh));
             localStorage.setItem("accountType", JSON.stringify(!!is_staff));
         }
@@ -24,55 +22,40 @@ export const login = async (username: string, password: string) => {
     }
 };
 
-// --- Обновление access-токена ---
-export const refreshToken = async () => {
-    try {
-        const storedRefresh = localStorage.getItem("refresh");
-        if (!storedRefresh) throw new Error("Нет refresh токена");
 
-        const response = await axios.post(`${API_URL}refresh/`, {
-            refresh: JSON.parse(storedRefresh)
+
+export const refreshToken = () => {
+    axios
+        .post(API_URL + "/refresh", {
+            refresh: refresh
+        })
+        .then((response) => {
+            if (response.data.access_token) {
+                localStorage.setItem("user", JSON.stringify(response.data.access_token));
+                localStorage.setItem("refresh", JSON.stringify(response.data.refresh_token))
+            }
         });
-
-        if (response.data.access) {
-            accessToken = response.data.access;
-        }
-
-    } catch (error) {
-        console.error("Ошибка обновления токена:", error);
-        logout(); // при ошибке — выходим
-    }
 };
 
-// --- Получение access-токена (из памяти) ---
-export const getAccessToken = () => accessToken;
-
-// --- Выход ---
 export const logout = () => {
-    accessToken = null;
     localStorage.clear();
 };
 
 
+export const getCurrentUser = () => {
+    return JSON.parse(localStorage.getItem("user")!);
+}
+
 const scheduleTokenRefresh = () => {
-    const REFRESH_INTERVAL = 50 * 60 * 1000;
+    const REFRESH_INTERVAL = 55 * 60 * 1000;
 
     setInterval(async () => {
-        await refreshToken();
+        try {
+            await refreshToken();
+        } catch (error) {
+            console.error("Ошибка обновления токена:", error);
+        }
     }, REFRESH_INTERVAL);
 };
 
 scheduleTokenRefresh();
-
-axios.interceptors.request.use(
-    async (config) => {
-        if (!accessToken) {
-            await refreshToken();
-        }
-        if (accessToken && config.headers) {
-            config.headers.Authorization = `Bearer ${accessToken}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
