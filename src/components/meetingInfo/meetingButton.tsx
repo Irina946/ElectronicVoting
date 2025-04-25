@@ -30,7 +30,7 @@ const MeetingActions: React.FC<MeetingActionsProps> = ({
             case 2:
                 return "Зарегестрироваться";
             case 3:
-                return "Зарегестрироваться";
+                return "Регистрация окончена";
             case 4:
                 return "Голосование завершено";
             case 5:

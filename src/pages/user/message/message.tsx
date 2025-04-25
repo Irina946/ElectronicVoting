@@ -21,7 +21,8 @@ export const Message = (): JSX.Element => {
     const [accaunts, setAccaunts] = useState<IUsersInMeeting[]>()
     const [selectedAccaunt, setSelectedAccaunt] = useState<IUsersInMeeting>({
         account_id: 0,
-        account_fullname: ''
+        account_fullname: '',
+        has_voted: false
     })
     const [errorRegister, setErrorRegister] = useState<string>('')
 
@@ -77,7 +78,8 @@ export const Message = (): JSX.Element => {
         const getUsers = async () => {
             try {
                 const data = await getAccounts(idMeeting.id)
-                setAccaunts(data.accounts)
+                const filteredAccounts = data.accounts.filter(account => !account.has_voted)
+                setAccaunts(filteredAccounts)
             } catch (error) {
                 console.error("Error fetching message:", error);
             }
@@ -130,6 +132,9 @@ export const Message = (): JSX.Element => {
                         <div className="text-base text-(--color-red) font-bold mb-7">
                             Выберите лицевой счет
                         </div>
+                        {accaunts?.length === 0 
+                        ? <div className="text-base text-(--color-text) mb-7">Нет лицевых счетов для голосования </div> 
+                        :
                         <div className="flex flex-col items-start gap-4 mb-7">
                             {accaunts?.map((account) => (
                                 <ButtonAccounts
@@ -140,6 +145,7 @@ export const Message = (): JSX.Element => {
                             ))}
 
                         </div>
+                        }
                         <ButtonMessageAdmin
                             title="Выбрать"
                             onClick={() => (

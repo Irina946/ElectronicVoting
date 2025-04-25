@@ -15,16 +15,13 @@ export interface IFormState {
     selectedDateAcceptance: string;
     selectedDateDefinition: string;
     selectedDateRegisterStart: string;
-    selectedDateRegisterEnd: string;
     selectedTimeRegisterStart: Date;
     selectedTimeRegisterEnd: Date;
     selectedDateMeeting: string;
     selectedTimeMeetingFrom: Date;
     selectedTimeMeetingTo: Date;
-    selectedDateReceivingBallotsStart: string;
-    selectedDateReceivingBallotsEnd: string;
-    selectedTimeReceivingBallotsStart: Date;
-    selectedTimeReceivingBallotsEnd: Date;
+    selectedDateVoting: string;
+    selectedTimeVoting: Date;
     agendas: IAgendaCreate[];
     files: File[];
     meeting_name?: string | null;

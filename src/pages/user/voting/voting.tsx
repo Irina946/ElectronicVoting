@@ -1,5 +1,4 @@
 import { JSX, useEffect, useState } from "react";
-import { RowVotingOne } from "../../../components/rowVoting/rowVotingOne";
 import { RowVotingNotCandidates } from "../../../components/rowVoting/rowVotingNotCandidates";
 import { RowVotingCandidatesCumulative } from "../../../components/rowVoting/rowVotingCandidatesCumulative";
 import { RowVotingCandidates } from "../../../components/rowVoting/rowVotingCandidates";
@@ -10,6 +9,7 @@ import { ButtonMessageAdmin } from "../../../components/button/buttonMessageAdmi
 import { Modal } from "../../../components/modal/modal";
 import { Button } from "../../../components/button/button";
 import { formatedDate, transformToVoteDtls } from "../../../utils/functions";
+import { TableHeader } from "../../../components/tableHeader/tableHeader";
 
 export const Voting = (): JSX.Element => {
     const [votes, setVotes] = useState<{ [key: number]: string | { [candidate: number]: number | string } }>({});
@@ -108,19 +108,10 @@ export const Voting = (): JSX.Element => {
                                 </a>
                             </div>
                         </div>
+                        <TableHeader />
                         {informations.agenda.map((agenda: IAgenda, idx: number) => (
                             <>
-                                {
-                                    agenda.details.length === 0 && idx === 0 &&
-                                    <RowVotingOne
-                                        agenda={agenda}
-                                        onVoteChange={handleVoteChange}
-                                        key={agenda.question_id}
-                                        numberQuestion={idx + 1}
-                                    />
-                                }
-                                {
-                                    agenda.details.length === 0 && idx !== 0 &&
+                                {agenda.details.length === 0 &&
                                     <RowVotingNotCandidates
                                         agenda={agenda}
                                         onVoteChange={handleVoteChange}
@@ -128,8 +119,7 @@ export const Voting = (): JSX.Element => {
                                         numberQuestion={idx + 1}
                                     />
                                 }
-                                {
-                                    agenda.details.length !== 0 && idx !== 0 && agenda.cumulative &&
+                                {agenda.details.length !== 0 && agenda.cumulative &&
                                     <RowVotingCandidatesCumulative
                                         agenda={agenda}
                                         onVoteChange={handleVoteChange}
@@ -138,8 +128,7 @@ export const Voting = (): JSX.Element => {
                                         numberQuestion={idx + 1}
                                     />
                                 }
-                                {
-                                    agenda.details.length !== 0 && idx !== 0 && !agenda.cumulative &&
+                                {agenda.details.length !== 0 && !agenda.cumulative &&
                                     <RowVotingCandidates
                                         agenda={agenda}
                                         key={agenda.question_id}
@@ -152,7 +141,6 @@ export const Voting = (): JSX.Element => {
                         <div className="flex items-center w-full justify-center mt-7 mb-3.5">
                             <ButtonMessageAdmin onClick={() => handleClickButtonResult()} title="Проголосовать" isSelected={false} />
                         </div>
-
                     </div>
                     {isOpenModal && <Modal onClose={() => { setIsOpenModal(false) }} visible={isOpenModal}>
                         {isSave
@@ -172,9 +160,7 @@ export const Voting = (): JSX.Element => {
                                 </div>
                             </div>
                         }
-
                     </Modal>}
-
                 </div>}
         </>
     )

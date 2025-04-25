@@ -59,6 +59,10 @@ export const NewMessage = (): JSX.Element => {
         updateTimeField('selectedTimeRegisterEnd', hours, minutes);
     };
 
+    const hadleTimeVotingStartChange = (hours: number, minutes: number) => {
+        updateTimeField('selectedTimeVoting', hours, minutes);
+    }
+
     const newOptions = parseListCompanyToOptions(listCompany);
 
     return (
@@ -153,26 +157,23 @@ export const NewMessage = (): JSX.Element => {
                             onChange={(e) => updateState('selectedDateRegisterStart', e)}
                         />
                     </div>
-                    <div className="flex items-center w-[348px] justify-between">
-                        <div className="mr-[28px]">
-                            Время начала регистрации:
+                    <div className="flex items-center w-[355px] justify-between">
+                        <div className="mr-[5px]">
+                            Время регистрации с
                         </div>
-                        <InputTime onTimeChange={handleTimeRegisterStartChange} />
-                    </div>
-                    <div className="flex items-center w-[374px] justify-between">
-                        <div className="mr-[28px]">
-                            Дата окончания регистрации:
-                        </div>
-                        <InputDate
-                            value={formState.selectedDateRegisterEnd}
-                            onChange={(e) => updateState('selectedDateRegisterEnd', e)}
+                        <InputTime 
+                            onTimeChange={handleTimeRegisterStartChange} 
+                            initialHours={new Date(formState.selectedTimeRegisterStart).getHours()}
+                            initialMinutes={new Date(formState.selectedTimeRegisterStart).getMinutes()}
                         />
-                    </div>
-                    <div className="flex items-center w-[348px] justify-between">
-                        <div className="mr-[28px]">
-                            Время окончания регистрации:
+                        <div>
+                            до
                         </div>
-                        <InputTime onTimeChange={handleTimeRegisterEndChange} />
+                        <InputTime 
+                            onTimeChange={handleTimeRegisterEndChange} 
+                            initialHours={new Date(formState.selectedTimeRegisterEnd).getHours()}
+                            initialMinutes={new Date(formState.selectedTimeRegisterEnd).getMinutes()}
+                        />
                     </div>
                     <div className="flex items-center w-[374px] justify-between">
                         <div className="mr-[28px]">
@@ -183,15 +184,42 @@ export const NewMessage = (): JSX.Element => {
                             onChange={(e) => updateState('selectedDateMeeting', e)}
                         />
                     </div>
-                    <div className="flex items-center w-[348px] justify-between">
-                        <div className="mr-[28px]">
+                    <div className="flex items-center w-[355px] justify-between">
+                        <div className="mr-[25px]">
                             Время собрания с
                         </div>
-                        <InputTime onTimeChange={handleTimeChangeFrom} />
+                        <InputTime 
+                            onTimeChange={handleTimeChangeFrom} 
+                            initialHours={new Date(formState.selectedTimeMeetingFrom).getHours()}
+                            initialMinutes={new Date(formState.selectedTimeMeetingFrom).getMinutes()}
+                        />
                         <div>
                             до
                         </div>
-                        <InputTime onTimeChange={handleTimeChangeTo} />
+                        <InputTime 
+                            onTimeChange={handleTimeChangeTo} 
+                            initialHours={new Date(formState.selectedTimeMeetingTo).getHours()}
+                            initialMinutes={new Date(formState.selectedTimeMeetingTo).getMinutes()}
+                        />
+                    </div>
+                    <div className="flex items-center w-[374px] justify-between">
+                        <div>
+                            Дата начала подсчёта голосов:
+                        </div>
+                        <InputDate
+                            value={formState.selectedDateVoting}
+                            onChange={(e) => updateState('selectedDateVoting', e)}
+                        />
+                    </div>
+                    <div className="flex items-center w-[355px] justify-between">
+                        <div className="mr-[28px]">
+                            Время начала подсчёта голосов:
+                        </div>
+                        <InputTime 
+                            onTimeChange={hadleTimeVotingStartChange} 
+                            initialHours={new Date(formState.selectedTimeVoting).getHours()}
+                            initialMinutes={new Date(formState.selectedTimeVoting).getMinutes()}
+                        />
                     </div>
                     <div className="flex items-center w-[275px] justify-between">
                         <div>

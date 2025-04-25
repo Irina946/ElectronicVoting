@@ -3,6 +3,7 @@ import { RowParticipants } from "../row/rowParticipants"
 import { ButtonParticipants } from "../button/buttonParticipants"
 import { getUsersinMeetingAdmin } from "../../requests/requests"
 import { IUsersInMeeting } from "../../requests/interfaces"
+import * as XLSX from 'xlsx'
 
 interface ParticipantsProps {
     status: number,
@@ -25,6 +26,22 @@ export const Participants = (props: ParticipantsProps): JSX.Element => {
         getUsers()
     }, [idMeeting])
 
+    const downloadExcel = () => {
+        if (!users) return;
+
+        const worksheet = XLSX.utils.json_to_sheet(
+            users.map(user => ({
+                'ФИО': user.account_fullname,
+                'Лицевой счет': user.account_id
+            }))
+        );
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Участники");
+        
+        XLSX.writeFile(workbook, `участники_${idMeeting}.xlsx`);
+    };
+
     return (
         <div>
             {status !== 5 &&
@@ -32,7 +49,7 @@ export const Participants = (props: ParticipantsProps): JSX.Element => {
                     Увидеть результаты участников можно после окончания голосования
                 </div>
             }
-
+            {users?.length === 0 ? <div className="text-2xl mb-4 text-(--color-red)">Нет зарегистрировавшихся участников</div> :
             <div className="flex gap-0">
 
                 <div
@@ -51,7 +68,7 @@ export const Participants = (props: ParticipantsProps): JSX.Element => {
                     <ButtonParticipants
                         color="gray"
                         title="Скачать список"
-                        onClick={() => { }}
+                        onClick={downloadExcel}
                     />
                 </div>
                 <div
@@ -78,6 +95,7 @@ export const Participants = (props: ParticipantsProps): JSX.Element => {
                     </div>
                 </div>
             </div>
+            }
         </div>
     )
 }

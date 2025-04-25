@@ -6,6 +6,7 @@ import { RowResultOne } from "../rowResult/rowResultOne";
 import { RowResultNotCandidates } from "../rowResult/rowResultNotCandidates";
 import { RowResultCandidates } from "../rowResult/rowResultCandidates";
 import { convertToQuestionWithVote } from "../../utils/functions";
+import { generateExcelFile } from "../../utils/excelGenerator";
 
 
 interface IResultChecked {
@@ -84,6 +85,7 @@ export const Results = (props: ResultsProps): JSX.Element => {
                 ?
                 <>
                     <button
+                        onClick={() => generateExcelFile(resultForRow)}
                         className={`
                                     w-[215px] 
                                     h-[45px]

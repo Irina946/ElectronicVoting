@@ -28,6 +28,12 @@ export const getTimeFromString = (timeStr: string): Date => {
 };
 
 export const mapMeetingCreateToFormStateEdit = (data: IMeetingUpdate): IFormState => {
+    const checkin = new Date(data.checkin);
+    const closeout = new Date(data.closeout);
+    const meetingOpen = new Date(data.meeting_open);
+    const meetingClose = new Date(data.meeting_close);
+    const voteCounting = data.vote_counting ? new Date(data.vote_counting) : new Date();
+
     return {
         selectedType: {
             value: data.annual_or_unscheduled,
@@ -40,16 +46,13 @@ export const mapMeetingCreateToFormStateEdit = (data: IMeetingUpdate): IFormStat
         selectedDateAcceptance: data.decision_date,
         selectedDateDefinition: data.record_date,
         selectedDateRegisterStart: data.record_date,
-        selectedDateRegisterEnd: data.deadline_date,
-        selectedTimeRegisterStart: data.checkin,
-        selectedTimeRegisterEnd: data.closeout,
+        selectedTimeRegisterStart: checkin,
+        selectedTimeRegisterEnd: closeout,
         selectedDateMeeting: data.meeting_date,
-        selectedTimeMeetingFrom: data.meeting_open,
-        selectedTimeMeetingTo: data.meeting_close,
-        selectedDateReceivingBallotsStart: "",
-        selectedDateReceivingBallotsEnd: "",
-        selectedTimeReceivingBallotsStart: new Date(data.record_date),
-        selectedTimeReceivingBallotsEnd: new Date(),
+        selectedTimeMeetingFrom: meetingOpen,
+        selectedTimeMeetingTo: meetingClose,
+        selectedDateVoting: data.vote_counting ? String(data.vote_counting).split('T')[0] : '',
+        selectedTimeVoting: voteCounting,
         agendas: (data.agenda as unknown as IAgendaFromServer[]).map(item => ({
             questionId: item.question_id,
             question: item.question,

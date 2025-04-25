@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { addTimedate, getTimeFromString, mapMeetingCreateToFormStateEdit } from "../utils/meeting";
 import { IFormState } from "../utils/interfaces";
-import { IAgendaCreate, IListCompany } from "../requests/interfaces";
+import { IAgendaCreate, IAgendaSent, IListCompany } from "../requests/interfaces";
 import { getDraftForId, getListCompany, postMeetingCreate, putDraft } from "../requests/requests";
 
 const defaultDate = new Date().toISOString().split("T")[0];
@@ -11,22 +11,19 @@ export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
     const [formState, setFormState] = useState<IFormState>({
         selectedType: { value: false, repeat: false },
         selectedForm: false,
-        selectedIssuer: undefined,
+        selectedIssuer: 0,
         selectedPlace: '',
         checkedEarlyRegistration: false,
         selectedDateAcceptance: defaultDate,
         selectedDateDefinition: defaultDate,
         selectedDateRegisterStart: defaultDate,
-        selectedDateRegisterEnd: defaultDate,
         selectedTimeRegisterStart: defaultTime,
         selectedTimeRegisterEnd: defaultTime,
         selectedDateMeeting: defaultDate,
         selectedTimeMeetingFrom: defaultTime,
         selectedTimeMeetingTo: defaultTime,
-        selectedDateReceivingBallotsStart: defaultDate,
-        selectedDateReceivingBallotsEnd: defaultDate,
-        selectedTimeReceivingBallotsStart: defaultTime,
-        selectedTimeReceivingBallotsEnd: defaultTime,
+        selectedDateVoting: defaultDate,
+        selectedTimeVoting: defaultTime,
         agendas: [],
         files: []
     });
@@ -55,15 +52,19 @@ export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
                 decision_date: formState.selectedDateAcceptance,
                 record_date: formState.selectedDateDefinition,
                 checkin: addTimedate(formState.selectedDateRegisterStart, getTime(formState.selectedTimeRegisterStart)),
-                closeout: addTimedate(formState.selectedDateRegisterEnd, getTime(formState.selectedTimeRegisterEnd)),
+                closeout: addTimedate(formState.selectedDateRegisterStart, getTime(formState.selectedTimeRegisterEnd)),
                 meeting_open: addTimedate(formState.selectedDateMeeting, getTime(formState.selectedTimeMeetingFrom)),
                 meeting_close: addTimedate(formState.selectedDateMeeting, getTime(formState.selectedTimeMeetingTo)),
                 early_registration: formState.checkedEarlyRegistration,
-                deadline_date: formState.selectedDateReceivingBallotsEnd,
-                agenda: formState.agendas,
+                agenda: formState.agendas.map((agenda): IAgendaSent => ({
+                    question: agenda.question,
+                    decision: agenda.decision,
+                    cumulative: agenda.cumulative,
+                    details: agenda.details
+                })),
                 file: formState.files,
                 meeting_date: formState.selectedDateMeeting,
-                vote_counting: addTimedate(formState.selectedDateReceivingBallotsStart, getTime(formState.selectedTimeReceivingBallotsStart)),
+                vote_counting: addTimedate(formState.selectedDateVoting, getTime(formState.selectedTimeVoting)),
                 meeting_name: formState.meeting_name || "",
                 meeting_url: formState.meeting_url || "",
                 status: formState.status || 1
@@ -115,7 +116,8 @@ export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
             if (isEditMode && idMessage !== -1) {
                 try {
                     const meeting = await getDraftForId(idMessage);
-                    setFormState(mapMeetingCreateToFormStateEdit(meeting));
+                    const newState = mapMeetingCreateToFormStateEdit(meeting);
+                    setFormState(newState);
                 } catch (err) {
                     console.error("Ошибка при получении собрания:", err);
                 }

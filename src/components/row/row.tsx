@@ -38,7 +38,6 @@ export const Row = (props: IRowProps) => {
     const [checked, setChecked] = useState(agenda ? agenda.cumulative : false);
     const [candidates, setCandidates] = useState<IAgendaDetails[]>(agenda ? agenda.details || [] : []);
     const [materials, setMaterials] = useState<File[]>([]);
-
     
 
     useEffect(() => {

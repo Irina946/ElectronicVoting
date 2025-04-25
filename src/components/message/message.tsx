@@ -84,7 +84,7 @@ export const Message = (props: MessageProps): JSX.Element => {
         >
             {type === "outgoing" &&
                 <div className="text-(--color-text) text-[13px] font-bold">
-                    {formatedDateBack(data.updated_at)}
+                    {formatedDateBack(data.sent_at)}
                 </div>
             }
             <div className={`

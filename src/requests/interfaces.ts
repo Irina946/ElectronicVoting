@@ -80,7 +80,8 @@ export interface IMeetingUsers extends IMeeting {
 
 export interface IUsersInMeeting {
     account_id: number,
-    account_fullname: string
+    account_fullname: string,
+    has_voted: boolean
 }
 
 export interface IAccauntsInMeeting {
@@ -101,13 +102,19 @@ export interface IAgendaCreate {
     details?: IAgendaDetails[],
 }
 
+export interface IAgendaSent {
+    question: string,
+    decision: string,
+    cumulative: boolean,
+    details?: IAgendaDetails[],
+}
+
 export interface IMeetingCreate {
     issuer: number,
     meeting_location: string,
     decision_date: string,
     record_date: string,
     meeting_date: string,
-    deadline_date: string,
     checkin: Date,
     closeout: Date,
     meeting_open: Date,
@@ -117,7 +124,7 @@ export interface IMeetingCreate {
     inter_or_extra_mural: boolean,
     first_or_repeated: boolean,
     early_registration: boolean,
-    agenda: IAgendaCreate[],
+    agenda: IAgendaSent[],
     file: File[]
 }
 

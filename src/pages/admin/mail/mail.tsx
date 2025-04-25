@@ -41,6 +41,17 @@ export const Mail = (): JSX.Element => {
         localStorage.setItem('messageType', currentType);
     }, [currentType]);
 
+    const sortedMessages = messages.sort((a, b) => {
+        if (currentType === 'drafts') {
+            return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        } else if (currentType === 'outgoing') {
+            const sentAtA = a.sent_at ? new Date(a.sent_at).getTime() : 0;
+            const sentAtB = b.sent_at ? new Date(b.sent_at).getTime() : 0;
+            return sentAtB - sentAtA;
+        }
+        return 0;
+    });
+
     const handleButtonClick = (type: 'outgoing' | 'drafts') => {
         setCurrentType(type);
 
@@ -84,7 +95,7 @@ export const Mail = (): JSX.Element => {
                     />
                 </div>
                 <div className="w-[831px] overflow-y-scroll">
-                    {messages.map((message) =>
+                    {sortedMessages.map((message) =>
                         <div key={message.meeting_id} className="border-b-[0.5px] border-(--color-text)">
 
                             <Message
