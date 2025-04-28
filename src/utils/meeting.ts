@@ -42,7 +42,7 @@ export const mapMeetingCreateToFormStateEdit = (data: IMeetingUpdate): IFormStat
         selectedForm: data.inter_or_extra_mural,
         selectedIssuer: data.issuer,
         selectedPlace: data.meeting_location,
-        checkedEarlyRegistration: data.early_registration,
+        checkedEarlyRegistration: data.early_registration ?? false,
         selectedDateAcceptance: data.decision_date,
         selectedDateDefinition: data.record_date,
         selectedDateRegisterStart: data.record_date,

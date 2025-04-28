@@ -3,19 +3,18 @@ import { ButtonMessageAdmin } from "../../../components/button/buttonMessageAdmi
 import { Information } from "../../../components/informations/information";
 import { Participants } from "../../../components/informations/participants";
 import { Results } from "../../../components/informations/results";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { IMeeting } from "../../../requests/interfaces";
 import { getMeetingForId } from "../../../requests/requests";
 
 export const MessagePageAdmin = (): JSX.Element => {
     const location = useLocation();
     const navigate = useNavigate();
+    const params = useParams();
 
     const [informationMeeting, setInformationMeeting] = useState<IMeeting | null>(null)
 
-    const idMeeting: { id: number } = location.state
-
-
+    const meetingId = location.state?.id || params.meetingID;
 
     const [currentType, setCurrentType] = useState<'information' | 'participants' | 'results'>(() => {
         const savedType = localStorage.getItem('informationType');
@@ -23,17 +22,23 @@ export const MessagePageAdmin = (): JSX.Element => {
     });
 
     useEffect(() => {
+        if (!meetingId) {
+            console.error("Meeting ID is missing");
+            navigate('/admin');
+            return;
+        }
+
         localStorage.setItem('informationType', currentType);
         const getMeeting = async () => {
             try {
-                const data = await getMeetingForId(idMeeting.id)
+                const data = await getMeetingForId(Number(meetingId))
                 setInformationMeeting(data);
             } catch (error) {
                 console.error("Error fetching message:", error);
             }
         };
         getMeeting()
-    }, [currentType, idMeeting]);
+    }, [currentType, meetingId, navigate]);
 
     const handleButtonClick = (type: 'information' | 'participants' | 'results') => {
         setCurrentType(type);
@@ -75,8 +80,8 @@ export const MessagePageAdmin = (): JSX.Element => {
                         {currentType === 'information' && <Information data={informationMeeting} />}
                         {currentType === 'participants' && <Participants
                             status={informationMeeting?.status || 0}
-                            idMeeting={idMeeting.id} />}
-                        {currentType === 'results' && <Results endTime={new Date(informationMeeting?.vote_counting || '')} idMeeting={idMeeting.id} />}
+                            idMeeting={Number(meetingId)} />}
+                        {currentType === 'results' && <Results endTime={new Date(informationMeeting?.vote_counting || '')} idMeeting={Number(meetingId)} />}
                     </div>
                 </>
                 : (<div className="flex justify-center items-center m-auto">

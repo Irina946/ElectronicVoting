@@ -26,7 +26,14 @@ export const Message = (): JSX.Element => {
     })
     const [errorRegister, setErrorRegister] = useState<string>('')
 
-    const idMeeting: { id: number } = location.state
+    useEffect(() => {
+        if (!location.state) {
+            navigate('/user');
+            return;
+        }
+    }, [location.state, navigate]);
+
+    const idMeeting: { id: number } = location.state || { id: 0 };
 
     const handleClickRegister = async () => {
         const register = async () => {

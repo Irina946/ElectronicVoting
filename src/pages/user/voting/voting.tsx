@@ -10,12 +10,14 @@ import { Modal } from "../../../components/modal/modal";
 import { Button } from "../../../components/button/button";
 import { formatedDate, transformToVoteDtls } from "../../../utils/functions";
 import { TableHeader } from "../../../components/tableHeader/tableHeader";
+import { AxiosError } from 'axios';
 
 export const Voting = (): JSX.Element => {
     const [votes, setVotes] = useState<{ [key: number]: string | { [candidate: number]: number | string } }>({});
-    const [informations, setInformations] = useState<IMeetingUsers>()
+    const [informations, setInformations] = useState<IMeetingUsers | null | undefined>()
     const [isOpenModal, setIsOpenModal] = useState<boolean>(false)
     const [isSave, setIsSave] = useState(false)
+    const [error, setError] = useState<string>()
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -26,8 +28,14 @@ export const Voting = (): JSX.Element => {
             try {
                 const data = await getMeetingForIdUser(idMeeting.id, idMeeting.userId)
                 setInformations(data)
-            } catch (error) {
-                console.error("Error fetching message:", error);
+            } catch (error: unknown) {
+                if (error instanceof AxiosError && error.response?.status === 404) {
+                    setError("Вы уже проголосовали")
+                    setInformations(null)
+                } else {
+                    console.error("Error fetching message:", error);
+                    setInformations(null)
+                }
             }
         };
         getMeeting()
@@ -48,8 +56,12 @@ export const Voting = (): JSX.Element => {
         const postVotes = async () => {
             try {
                 await postVote(idMeeting.id, transformToVoteDtls(votes), idMeeting.userId)
-            } catch (error) {
-                console.error("Error:", error)
+            } catch (error: unknown) {
+                if (error instanceof AxiosError && error.response?.status === 404) {
+                    setError("Вы уже проголосовали")
+                } else {
+                    console.error("Error:", error)
+                }
             }
         }
         postVotes();
@@ -60,11 +72,19 @@ export const Voting = (): JSX.Element => {
 
     return (
         <>
-            {informations === undefined
-                ? (<div className="flex justify-center items-center m-auto">
+            {informations === undefined ? (
+                <div className="flex justify-center items-center m-auto h-[900px]">
                     <div className="loader"></div>
-                </div>)
-                :
+                </div>
+            ) : error ? (
+                <div className="flex justify-center items-center m-auto h-[900px]">
+                    <div className="text-red-500 text-xl">{error}</div>
+                </div>
+            ) : informations === null ? (
+                <div className="flex justify-center items-center m-auto h-[900px]">
+                    <div className="text-red-500 text-xl">Произошла ошибка при загрузке данных</div>
+                </div>
+            ) : (
                 <div className="w-[1016px] m-auto">
                     <h1 className="text-[32px] text-(--color-text) my-7">
                         Голосование
@@ -161,7 +181,8 @@ export const Voting = (): JSX.Element => {
                             </div>
                         }
                     </Modal>}
-                </div>}
+                </div>
+            )}
         </>
     )
 }

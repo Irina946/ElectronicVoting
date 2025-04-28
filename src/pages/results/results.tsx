@@ -8,6 +8,7 @@ import { RowResultNotCandidates } from "../../components/rowResult/rowResultNotC
 import { RowResultCandidates } from "../../components/rowResult/rowResultCandidates";
 import { Button } from "../../components/button/button";
 import { mergeQuestionsWithVotes } from "../../utils/functions";
+import { AxiosError } from 'axios';
 
 export interface IQuestionWithVote extends IAgenda {
     vote?: IVoteInstr[]; // vote теперь массив, так как может быть несколько голосов
@@ -15,7 +16,8 @@ export interface IQuestionWithVote extends IAgenda {
 
 
 export const Results = () => {
-    const [results, setResults] = useState<IResultsMeeting>()
+    const [results, setResults] = useState<IResultsMeeting | null | undefined>()
+    const [error, setError] = useState<string>()
     const location = useLocation();
     const navigate = useNavigate();
     const meetingInfo: { id: number, userId: number, userName: string } = location.state
@@ -27,8 +29,14 @@ export const Results = () => {
                 const data = await getMeetingResults(meetingInfo.id, meetingInfo.userId)
                 setResults(data);
                 setResultForRow(mergeQuestionsWithVotes(data.data, data.votes))
-            } catch (error) {
-                console.error("Error fetching message:", error);
+            } catch (error: unknown) {
+                if (error instanceof AxiosError && error.response?.status === 404) {
+                    setError("Пользователь не проголосовал")
+                    setResults(null)
+                } else {
+                    console.error("Error fetching message:", error);
+                    setResults(null)
+                }
             }
         };
         getMeeting()
@@ -36,16 +44,24 @@ export const Results = () => {
 
     return (
         <>
-            {results === undefined
-                ? (<div className="flex justify-center items-center m-auto">
+            {results === undefined ? (
+                <div className="flex justify-center items-center m-auto h-[190px]">
                     <div className="loader"></div>
-                </div>)
-                :
+                </div>
+            ) : error ? (
+                <div className="flex justify-center items-center m-auto h-[190px]">
+                    <div className="text-red-500 text-xl">{error}</div>
+                </div>
+            ) : results === null ? (
+                <div className="flex justify-center items-center m-auto h-[190px]">
+                    <div className="text-red-500 text-xl">Произошла ошибка при загрузке данных</div>
+                </div>
+            ) : (
                 <div className="w-[1016px] m-auto">
                     <h1 className="text-[32px] text-(--color-text) my-7">
                         Результаты голосования акционера {meetingInfo.userName}
                     </h1>
-                    <Button title="Назад" color="empty" onClick={() => navigate(-1) } />
+                    <Button title="Назад" color="empty" onClick={() => navigate(-1)} />
                     <div className="
                                 w-full
                                 py-3.5
@@ -63,25 +79,21 @@ export const Results = () => {
                             Материалы собрания
                         </a> */}
                         {resultForRow.map((question: IQuestionWithVote, idx: number) => (
-
                             <React.Fragment key={question.question_id}>
-                                {
-                                    question.details.length === 0 && idx === 0 &&
+                                {question.details.length === 0 && idx === 0 && (
                                     <RowResultOne question={question} number={idx + 1} key={question.question_id} />
-                                }
-                                {
-                                    question.details.length === 0 && idx !== 0 &&
+                                )}
+                                {question.details.length === 0 && idx !== 0 && (
                                     <RowResultNotCandidates question={question} number={idx + 1} key={question.question_id} />
-                                }
-                                {
-                                    question.details.length !== 0 && idx !== 0 &&
+                                )}
+                                {question.details.length !== 0 && idx !== 0 && (
                                     <RowResultCandidates question={question} number={idx + 1} key={question.question_id} />
-                                }
+                                )}
                             </React.Fragment>
-
                         ))}
                     </div>
-                </div>}
+                </div>
+            )}
         </>
-    )
+    );
 }

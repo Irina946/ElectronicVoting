@@ -1,4 +1,4 @@
-import { Link, matchPath, useLocation } from "react-router";
+import { matchPath, useLocation, useNavigate, useParams } from "react-router";
 import headerTop from "../../assets/header1.svg"
 import headerCenter from "../../assets/header2.svg"
 
@@ -13,20 +13,40 @@ const routes: RouteConfig[] = [
     { path: "/admin", text: "", pathPrev: "/" },
     { path: "/admin/meeting/new", text: "Создать сообщение", pathPrev: "/admin" },
     { path: "/admin/meeting/:meetingID", text: "Собрание", pathPrev: "/admin" },
-    { path: "/admin/meeting/:meetingID/edit", text: "Редактировать сообщение", pathPrev: "/admin" },
+    { path: "/admin/meeting/:meetingID/edit", text: "Редактировать сообщение", pathPrev: "/admin/meeting/:meetingID" },
     { path: "/admin/meeting/:meetingID/results/:userID", text: "Результаты участника", pathPrev: "/admin/meeting/:meetingID" },
     { path: "/user", text: "", pathPrev: "/" },
     { path: "/user/meeting/:meetingID", text: "Сообщение", pathPrev: "/user" },
     { path: "/user/meeting/:meetingID/broadcast", text: "Трансляция собрания", pathPrev: "/user/meeting/:meetingID" },
     { path: "/user/meeting/:meetingID/voting/:userID", text: "Голосование", pathPrev: "/user/meeting/:meetingID" },
-    { path: "/user/meeting/:meetingID/result/:userID", text: "Результаты голосования", pathPrev: "/user/meeting/:meetingID" }
+    { path: "/user/meeting/:meetingID/result/:userID", text: "Результаты голосования", pathPrev: "/user/meeting/:meetingID", pathNext: "/user/meeting/:meetingID/voting/:userID" }
 ];
 
 export const Header = () => {
-
     const location = useLocation();
+    const navigate = useNavigate();
+    const params = useParams();
 
     const currentRoute = routes.find(route => matchPath(route.path, location.pathname));
+
+    const getPathWithParams = (path: string) => {
+        if (!path) return '/';
+        
+        // Сохраняем meetingID для всех маршрутов, где он используется
+        if (params.meetingID) {
+            return path.replace(/:(\w+)/g, (match: string, param: string) => {
+                if (param === 'meetingID') return params.meetingID || match;
+                return params[param] || match;
+            });
+        }
+        
+        return path;
+    };
+
+    const handleNavigation = (path: string) => {
+        const pathWithParams = getPathWithParams(path);
+        navigate(pathWithParams);
+    };
 
     return (
         <div className="flex flex-col justify-center items-center">
@@ -36,11 +56,20 @@ export const Header = () => {
             </div>
             <div className="bg-(--color-gray) w-[100%] h-[50px] align-middle flex justify-center">
                 <div className="w-[1020px] text-base font-(--font-display) py-[15px] text-(--color-text)">
-                    <u>Главная</u> / <u>Услуги</u> / Сервис - Личный кабинет / <Link
-                        to={currentRoute?.pathPrev || '/'}
+                    <u>Главная</u> / <u>Услуги</u> / Сервис - Личный кабинет / <span
+                        onClick={() => handleNavigation(currentRoute?.pathPrev || '/')}
                         className="cursor-pointer hover:border-b-[1px] hover:border-(--color-text)">
                         Сервис - Общее собрание акционеров
-                    </Link> {currentRoute?.path ? <Link to={currentRoute.path}>/ {currentRoute.text}</Link> : ''}
+                    </span> {currentRoute?.path ? <span onClick={() => handleNavigation(currentRoute.path)}>/ {currentRoute.text}</span> : ''}
+                    {currentRoute?.pathNext && (
+                        <span className="ml-2">
+                            / <span
+                                onClick={() => handleNavigation(currentRoute.pathNext || '/')}
+                                className="cursor-pointer hover:border-b-[1px] hover:border-(--color-text)">
+                                Вернуться к голосованию
+                            </span>
+                        </span>
+                    )}
                 </div>
             </div>
         </div>

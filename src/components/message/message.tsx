@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { JSX, useState } from "react";
+import { JSX, useState, useEffect } from "react";
 import { ButtonMessage } from "../button/buttonMessage";
 import { IMail } from "../../requests/interfaces";
 import { putMeeting } from "../../requests/requests";
@@ -50,6 +50,16 @@ export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareh
 export const Message = (props: MessageProps): JSX.Element => {
     const { onClick, data, type } = props;
     const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false)
+    const [alertMessage, setAlertMessage] = useState<string>("")
+
+    useEffect(() => {
+        if (isOpenAlert) {
+            const timer = setTimeout(() => {
+                setIsOpenAlert(false)
+            }, 3000)
+            return () => clearTimeout(timer)
+        }
+    }, [isOpenAlert])
 
     const nameCompany = data.issuer.short_name.slice(0, 2) === 'АО' ? data.issuer.short_name.slice(3) : data.issuer.short_name
 
@@ -58,11 +68,22 @@ export const Message = (props: MessageProps): JSX.Element => {
         const sendMail = async () => {
             try {
                 await putMeeting(data.meeting_id)
+                setAlertMessage("Сообщение успешно отправлено")
                 setIsOpenAlert(true)
                 props.refreshMessages()
             } catch (error) {
                 if (error instanceof AxiosError) {
-                    console.log(error)
+                    try {
+                        const errorResponse = JSON.parse(error.request?.response)
+                        if (errorResponse.error?.includes('не заполнены обязательные поля')) {
+                            setAlertMessage("Нельзя отправить, заполнены не все поля")
+                        } else {
+                            setAlertMessage(errorResponse.error || "Произошла ошибка при отправке сообщения")
+                        }
+                    } catch {
+                        setAlertMessage("Произошла ошибка при отправке сообщения")
+                    }
+                    setIsOpenAlert(true)
                 }
             }
         };
@@ -111,8 +132,8 @@ export const Message = (props: MessageProps): JSX.Element => {
 
             </div>
             {isOpenAlert &&
-                <Alert message="Сообщение упесшно отправлено" onClose={() => setIsOpenAlert(false) } />
-}
+                <Alert message={alertMessage} onClose={() => setIsOpenAlert(false)} />
+            }
         </div>
     );
 };

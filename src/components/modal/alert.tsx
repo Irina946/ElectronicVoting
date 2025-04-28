@@ -13,8 +13,8 @@ export const Alert = (props: IAlertProps): JSX.Element => {
                         bottom-4
                         right-4
                         bg-[#30303075]
-                        w-[270px]
-                        h-[80px]
+                        w-[280px]
+                        h-[100px]
                         p-[7px]
                         flex
                         flex-col
