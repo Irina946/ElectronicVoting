@@ -126,4 +126,82 @@ describe('generateExcelFile', () => {
         expect(ExcelJS.Workbook).toHaveBeenCalled();
         expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
+
+    it('должен обрабатывать данные с несколькими кандидатами', async () => {
+        const dataWithMultipleCandidates: IQuestionWithVote[] = [
+            {
+                question_id: 3,
+                question: 'Тестовый вопрос 3',
+                decision: 'Тестовое решение 3',
+                single_vote_per_shareholder: true,
+                cumulative: false,
+                seat_count: 2,
+                vote: [
+                    {
+                        QuestionId: 3,
+                        For: { Quantity: 15 },
+                        Against: { Quantity: 3 },
+                        Abstain: { Quantity: 1 }
+                    },
+                    {
+                        QuestionId: 3,
+                        For: { Quantity: 12 },
+                        Against: { Quantity: 5 },
+                        Abstain: { Quantity: 2 }
+                    }
+                ],
+                details: [
+                    {
+                        detail_id: 1,
+                        detail_text: 'Кандидат 1'
+                    },
+                    {
+                        detail_id: 2,
+                        detail_text: 'Кандидат 2'
+                    }
+                ]
+            }
+        ];
+
+        await generateExcelFile(dataWithMultipleCandidates);
+
+        expect(ExcelJS.Workbook).toHaveBeenCalled();
+        expect(global.URL.createObjectURL).toHaveBeenCalled();
+    });
+
+    it('должен обрабатывать данные с отсутствующими значениями голосов', async () => {
+        const dataWithMissingVotes: IQuestionWithVote[] = [
+            {
+                question_id: 4,
+                question: 'Тестовый вопрос 4',
+                decision: 'Тестовое решение 4',
+                single_vote_per_shareholder: true,
+                cumulative: false,
+                seat_count: 1,
+                vote: [
+                    {
+                        QuestionId: 4,
+                        For: { Quantity: 20 },
+                        Against: undefined,
+                        Abstain: undefined
+                    }
+                ],
+                details: []
+            }
+        ];
+
+        await generateExcelFile(dataWithMissingVotes);
+
+        expect(ExcelJS.Workbook).toHaveBeenCalled();
+        expect(global.URL.createObjectURL).toHaveBeenCalled();
+    });
+
+    it('должен обрабатывать ошибку при генерации файла', async () => {
+        const mockError = new Error('Ошибка генерации файла');
+        (ExcelJS.Workbook as jest.Mock).mockImplementationOnce(() => {
+            throw mockError;
+        });
+
+        await expect(generateExcelFile(mockData)).rejects.toThrow('Ошибка генерации файла');
+    });
 }); 

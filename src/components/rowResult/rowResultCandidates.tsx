@@ -53,7 +53,7 @@ export const RowResultCandidates = (props: RowResultProps): JSX.Element => {
                             <div className="px-3.5 border-r-[1px] flex items-center justify-center">
                             </div>
                             <div className={`py-3.5 px-12 ${styles.borderTop}`}>
-                                {question.details[idx].detail_text}
+                                {question.details?.[idx]?.detail_text}
                             </div>
                             <div className={`
                                             ${styles.borderTop} 

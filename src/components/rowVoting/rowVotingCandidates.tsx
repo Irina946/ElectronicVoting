@@ -82,8 +82,11 @@ export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
                     <div className="p-3.5 border-r-[0.5px]">
                         <div className="flex justify-between items-center">
                             <div className="mb-3.5 ">
-                                {agenda.details.map((material) => (
-                                    material.detail_text
+                                {agenda.details.map((material, index) => (
+                                    <span key={material.detail_id}>
+                                        {material.detail_text}
+                                        {index < agenda.details.length - 1 ? ' ' : ''}
+                                    </span>
                                 ))}
                             </div>
                         </div>

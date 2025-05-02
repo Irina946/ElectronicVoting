@@ -109,9 +109,9 @@ export function convertToQuestionWithVote(data: IAllResultsMeeting): IQuestionWi
         const voteInstrs: IVoteInstr[] = results.map(result => ({
             QuestionId,
             DetailId: result.DetailId ?? undefined,
-            For: result.For ? { Quantity: result.For } : undefined,
-            Against: result.Against ? { Quantity: result.Against } : undefined,
-            Abstain: result.Abstain ? { Quantity: result.Abstain } : undefined,
+            For: result.For ? { Quantity: result.For } : { Quantity: 0 },
+            Against: result.Against ? { Quantity: result.Against } : { Quantity: 0 },
+            Abstain: result.Abstain ? { Quantity: result.Abstain } : { Quantity: 0 },
         }));
         voteMap.set(QuestionId, voteInstrs);
     });
@@ -119,6 +119,11 @@ export function convertToQuestionWithVote(data: IAllResultsMeeting): IQuestionWi
     // Преобразуем каждый пункт повестки
     return meetingData.agenda.map(agendaItem => ({
         ...agendaItem,
-        vote: voteMap.get(agendaItem.question_id),
+        vote: voteMap.get(agendaItem.question_id) || [{
+            QuestionId: agendaItem.question_id,
+            For: { Quantity: 0 },
+            Against: { Quantity: 0 },
+            Abstain: { Quantity: 0 }
+        }],
     }));
 }

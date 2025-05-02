@@ -25,70 +25,54 @@ const formatedDateBack = (date: string | null): string => {
     return arrDate ? `${arrDate[2]}.${arrDate[1]}.${arrDate[0]}` : ''
 }
 
-export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareholder",): string => {
-    if (type === 'drafts') {
-        if (text.length <= 76) {
-            return `«${text}»`
-        }
-        return `«${text.substring(0, 76)}...»`;
+export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareholder"): string => {
+    const maxLength = type === 'drafts' ? 76 : type === 'shareholder' ? 85 : 91;
+    
+    if (text.length <= maxLength) {
+        return `«${text}»`;
     }
-    if (type === 'shareholder') {
-        if (text.length <= 85) {
-            return `«${text}»`
-        }
-        return `«${text.substring(0, 85)}...»`
-    }
-    if (text.length <= 91) {
-        return `«${text}»`
-    }
-    const newText = `«${text.substring(0, 91)}...»`;
-    return newText
-}
-
-
+    
+    return `«${text.substring(0, maxLength)}...»`;
+};
 
 export const Message = (props: MessageProps): JSX.Element => {
     const { onClick, data, type } = props;
-    const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false)
-    const [alertMessage, setAlertMessage] = useState<string>("")
+    const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false);
+    const [alertMessage, setAlertMessage] = useState<string>("");
 
     useEffect(() => {
         if (isOpenAlert) {
             const timer = setTimeout(() => {
-                setIsOpenAlert(false)
-            }, 3000)
-            return () => clearTimeout(timer)
+                setIsOpenAlert(false);
+            }, 3000);
+            return () => clearTimeout(timer);
         }
-    }, [isOpenAlert])
+    }, [isOpenAlert]);
 
-    const nameCompany = data.issuer.short_name.slice(0, 2) === 'АО' ? data.issuer.short_name.slice(3) : data.issuer.short_name
+    const nameCompany = data.issuer.short_name.startsWith('АО') 
+        ? data.issuer.short_name.slice(3) 
+        : data.issuer.short_name;
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        e.stopPropagation()
-        const sendMail = async () => {
-            try {
-                await putMeeting(data.meeting_id)
-                setAlertMessage("Сообщение успешно отправлено")
-                setIsOpenAlert(true)
-                props.refreshMessages()
-            } catch (error) {
-                if (error instanceof AxiosError) {
-                    try {
-                        const errorResponse = JSON.parse(error.request?.response)
-                        if (errorResponse.error?.includes('не заполнены обязательные поля')) {
-                            setAlertMessage("Нельзя отправить, заполнены не все поля")
-                        } else {
-                            setAlertMessage(errorResponse.error || "Произошла ошибка при отправке сообщения")
-                        }
-                    } catch {
-                        setAlertMessage("Произошла ошибка при отправке сообщения")
-                    }
-                    setIsOpenAlert(true)
+    const handleClick = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        e.stopPropagation();
+        try {
+            await putMeeting(data.meeting_id);
+            setAlertMessage("Сообщение успешно отправлено");
+            setIsOpenAlert(true);
+            props.refreshMessages();
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                if (error.response?.data?.error?.includes('не заполнены обязательные поля')) {
+                    setAlertMessage("Нельзя отправить, заполнены не все поля");
+                } else if (error.response?.data?.error) {
+                    setAlertMessage(error.response.data.error);
+                } else {
+                    setAlertMessage("Произошла ошибка при отправке сообщения");
                 }
+                setIsOpenAlert(true);
             }
-        };
-        sendMail()
-    }
+        }
+    };
 
     return (
         <div
@@ -103,37 +87,44 @@ export const Message = (props: MessageProps): JSX.Element => {
                 `}
             onClick={onClick}
         >
-            {type === "outgoing" &&
+            {type === "outgoing" && (
                 <div className="text-(--color-text) text-[13px] font-bold">
                     {formatedDateBack(data.sent_at)}
                 </div>
-            }
+            )}
             <div className={`
-                                flex 
-                                items-center 
-                                ${type === 'drafts' ? 'ml-[7px]' : 'ml-[28px]'}
-                            `}>
+                flex 
+                items-center 
+                ${type === 'drafts' ? 'ml-[7px]' : 'ml-[28px]'}
+            `}>
                 <div className="flex justify-between w-full pr-[14px] items-center mt-[10px]">
                     <div className="mb-[10px]">
-                        {formatedText(`Сообщение о проведении ${data.annual_or_unscheduled
-                            ? 'Годового'
-                            : 'Внеочередного'} ${data.first_or_repeated
-                                ? ''
-                                : 'повторного'} Общего собрания Акционерного общества ${nameCompany}`, type)}
+                        {formatedText(
+                            `Сообщение о проведении ${data.annual_or_unscheduled
+                                ? 'Годового'
+                                : 'Внеочередного'} ${data.first_or_repeated
+                                    ? ''
+                                    : 'повторного'} Общего собрания Акционерного общества ${nameCompany}`,
+                            type
+                        )}
                     </div>
                     {type === 'drafts' && (
                         <ButtonMessage
                             title='Отправить сообщение'
                             color='yellow'
                             textSize="text-sm"
-                            onClick={(event) => handleClick(event)} />
+                            onClick={handleClick}
+                        />
                     )}
                 </div>
-
             </div>
-            {isOpenAlert &&
-                <Alert message={alertMessage} onClose={() => setIsOpenAlert(false)} />
-            }
+            {isOpenAlert && (
+                <Alert 
+                    message={alertMessage} 
+                    onClose={() => setIsOpenAlert(false)} 
+                    data-testid="alert-message" 
+                />
+            )}
         </div>
     );
 };

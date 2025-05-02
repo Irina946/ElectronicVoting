@@ -137,16 +137,25 @@ export const Row = (props: IRowProps) => {
                         agenda === null
                             ? <button
                                 className="cursor-pointer"
+                                data-testid="plus-button"
                                 onClick={handleClickPlus}
                             >
-                                <img src={plus} />
+                                <img src={plus} alt="Добавить" />
                             </button>
                             : <>
-                                <button className="mb-5 cursor-pointer" onClick={handleClickDelete}>
-                                    <img src={minus} />
+                                <button
+                                    className="cursor-pointer"
+                                    data-testid="minus-button"
+                                    onClick={handleClickDelete}
+                                >
+                                    <img src={minus} alt="Удалить" />
                                 </button>
-                                <button className="cursor-pointer" onClick={handleClickEdit}>
-                                    <img src={edit}/>
+                                <button
+                                    className="cursor-pointer"
+                                    data-testid="edit-button"
+                                    onClick={handleClickEdit}
+                                >
+                                    <img src={edit} alt="Редактировать" />
                                 </button>
                             </>
                     }
@@ -183,13 +192,13 @@ export const Row = (props: IRowProps) => {
                             <div className="mb-[7px]">Добавьте кандидата/подвопрос:</div>
                             {candidates.map((candidate, index) =>
                             (
-                                <div className="flex items-center mb-3.5">
+                                <div key={`candidate-${index}`} className="flex items-center mb-3.5">
                                     <button className="cursor-pointer mr-[7px]" onClick={() => onClickRemoveCandidate(index)}>
-                                        <img src={minus} />
+                                        <img src={minus} alt="Удалить кандидата" />
                                     </button>
                                     <Input
                                         value={candidate.detail_text}
-                                        key={index}
+                                        key={`input-${index}`}
                                         placeholder=""
                                         onChange={(value) => handleChangeCandidate(value, index)} />
                                 </div>

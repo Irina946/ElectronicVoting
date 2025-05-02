@@ -62,10 +62,11 @@ describe('useMeetingForm', () => {
     });
 
     it('должен загружать список компаний при монтировании', async () => {
-        const { result } = renderHook(() => useMeetingForm(-1, false));
+        const { result, rerender } = renderHook(() => useMeetingForm(-1, false));
         
         await act(async () => {
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await Promise.resolve();
+            rerender();
         });
 
         expect(getListCompany).toHaveBeenCalled();
@@ -73,10 +74,11 @@ describe('useMeetingForm', () => {
     });
 
     it('должен загружать данные собрания в режиме редактирования', async () => {
-        const { result } = renderHook(() => useMeetingForm(1, true));
+        const { result, rerender } = renderHook(() => useMeetingForm(1, true));
         
         await act(async () => {
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await Promise.resolve();
+            rerender();
         });
 
         expect(getDraftForId).toHaveBeenCalledWith(1);
@@ -130,10 +132,11 @@ describe('useMeetingForm', () => {
     });
 
     it('должен сохранять новое собрание', async () => {
-        const { result } = renderHook(() => useMeetingForm(-1, false));
+        const { result, rerender } = renderHook(() => useMeetingForm(-1, false));
         
         await act(async () => {
             await result.current.handleSaveMeeting();
+            rerender();
         });
 
         expect(postMeetingCreate).toHaveBeenCalled();
@@ -141,13 +144,98 @@ describe('useMeetingForm', () => {
     });
 
     it('должен обновлять существующее собрание', async () => {
-        const { result } = renderHook(() => useMeetingForm(1, true));
+        const { result, rerender } = renderHook(() => useMeetingForm(1, true));
         
         await act(async () => {
             await result.current.handleSaveMeeting();
+            rerender();
         });
 
         expect(putDraft).toHaveBeenCalledWith(1, expect.any(Object));
         expect(result.current.isOpenAlert).toBe(true);
+    });
+
+    it('должен обновлять пункт повестки дня', () => {
+        const { result } = renderHook(() => useMeetingForm(-1, false));
+        const initialAgenda = {
+            question: 'Initial Question',
+            decision: 'Initial Decision',
+            cumulative: false,
+            details: mockAgendaDetails,
+            questionId: 1
+        };
+        const updatedAgenda = {
+            question: 'Updated Question',
+            decision: 'Updated Decision',
+            cumulative: true,
+            details: mockAgendaDetails,
+            questionId: 1
+        };
+
+        act(() => {
+            result.current.handleAgendaAdd(initialAgenda);
+            result.current.handleAgendaUpdate(updatedAgenda, 0);
+        });
+
+        expect(result.current.formState.agendas[0]).toEqual(updatedAgenda);
+    });
+
+    it('должен обновлять время', () => {
+        const { result } = renderHook(() => useMeetingForm(-1, false));
+        const initialTime = result.current.formState.selectedTimeRegisterStart;
+        
+        act(() => {
+            result.current.updateTimeField('selectedTimeRegisterStart', 15, 30);
+        });
+
+        const newTime = result.current.formState.selectedTimeRegisterStart as Date;
+        expect(newTime.getHours()).toBe(15);
+        expect(newTime.getMinutes()).toBe(30);
+        expect(newTime).not.toEqual(initialTime);
+    });
+
+    it('должен обрабатывать ошибку при загрузке компаний', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+        (getListCompany as jest.Mock).mockRejectedValue(new Error('Ошибка загрузки компаний'));
+
+        const { rerender } = renderHook(() => useMeetingForm(-1, false));
+        
+        await act(async () => {
+            await Promise.resolve();
+            rerender();
+        });
+
+        expect(consoleSpy).toHaveBeenCalledWith('Ошибка при получении компаний:', expect.any(Error));
+        consoleSpy.mockRestore();
+    });
+
+    it('должен обрабатывать ошибку при загрузке собрания', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+        (getDraftForId as jest.Mock).mockRejectedValue(new Error('Ошибка загрузки собрания'));
+
+        const { rerender } = renderHook(() => useMeetingForm(1, true));
+        
+        await act(async () => {
+            await Promise.resolve();
+            rerender();
+        });
+
+        expect(consoleSpy).toHaveBeenCalledWith('Ошибка при получении собрания:', expect.any(Error));
+        consoleSpy.mockRestore();
+    });
+
+    it('должен обрабатывать ошибку при сохранении собрания', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+        (postMeetingCreate as jest.Mock).mockRejectedValue(new Error('Ошибка сохранения'));
+
+        const { result, rerender } = renderHook(() => useMeetingForm(-1, false));
+        
+        await act(async () => {
+            await result.current.handleSaveMeeting();
+            rerender();
+        });
+
+        expect(consoleSpy).toHaveBeenCalledWith('Ошибка при сохранении встречи:', expect.any(Error));
+        consoleSpy.mockRestore();
     });
 }); 

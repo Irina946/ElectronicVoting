@@ -29,7 +29,7 @@ export const refreshToken = async () => {
             throw new Error("Refresh token не найден");
         }
 
-        const response = await axios.post(API_URL + "/refresh", {
+        const response = await axios.post(API_URL + "refresh", {
             refresh: JSON.parse(refreshToken)
         });
 
