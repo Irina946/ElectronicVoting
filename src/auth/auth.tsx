@@ -6,13 +6,54 @@ const API_URL = "http://localhost:8000/api/token/";
 let isRefreshing = false;
 // Идентификатор интервала обновления токена
 let tokenRefreshInterval: number | null = null;
+// Список ожидающих запросов во время обновления токена
+let failedRequestsQueue: Array<{
+    onSuccess: (token: string) => void;
+    onFailure: (error: unknown) => void;
+}> = [];
 
 // Расширяем глобальный интерфейс Window
 declare global {
-  interface Window {
-    _tokenRefreshInterval?: number;
-  }
+    interface Window {
+        _tokenRefreshInterval?: number;
+    }
 }
+
+// Декодирование JWT без сторонних библиотек
+export const decodeJwt = (token: string): { exp?: number; username?: string } => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error('Ошибка при декодировании токена:', e);
+        return {};
+    }
+};
+
+// Проверка истечения срока действия токена
+export const isTokenExpired = (token: string): boolean => {
+    try {
+        const decodedToken = decodeJwt(token);
+        if (!decodedToken.exp) return true;
+
+        // Получаем текущее время в секундах
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        // Добавляем небольшой запас времени (30 секунд)
+        return decodedToken.exp < currentTime + 30;
+    } catch (e) {
+        console.error('Ошибка при проверке срока действия токена:', e);
+        return true;
+    }
+};
 
 export const login = async (username: string, password: string) => {
     try {
@@ -23,6 +64,9 @@ export const login = async (username: string, password: string) => {
             localStorage.setItem("user", JSON.stringify(access));
             localStorage.setItem("refresh", JSON.stringify(refresh));
             localStorage.setItem("accountType", JSON.stringify(!!is_staff));
+
+            // Запускаем процесс автоматического обновления токенов
+            scheduleTokenRefresh();
         }
 
         return { success: true, isStaff: !!is_staff };
@@ -33,67 +77,101 @@ export const login = async (username: string, password: string) => {
 };
 
 export const refreshToken = async () => {
-    // Если запрос уже выполняется, не запускаем новый
+    // Если запрос уже выполняется, ставим новые запросы в очередь
     if (isRefreshing) {
-        return false;
+        return new Promise((resolve, reject) => {
+            failedRequestsQueue.push({
+                onSuccess: () => resolve(true),
+                onFailure: (error) => reject(error)
+            });
+        });
     }
 
     isRefreshing = true;
 
     try {
-        const refreshToken = localStorage.getItem("refresh");
-        if (!refreshToken) {
+        const refreshTokenStr = localStorage.getItem("refresh");
+        if (!refreshTokenStr) {
             throw new Error("Refresh token не найден");
         }
 
-        // Проверка срока действия токена
-        const token = localStorage.getItem("user");
-        if (!token) {
+        // Проверяем, есть ли текущий токен
+        const tokenStr = localStorage.getItem("user");
+        if (!tokenStr) {
             throw new Error("Access token не найден");
         }
 
-        // Пытаемся обновить токен, если API недоступен, просто продолжаем использовать текущий
+        const parsedToken = JSON.parse(tokenStr);
+
+        // Если токен не истек и это не принудительное обновление, просто возвращаем true
+        if (!isTokenExpired(parsedToken)) {
+            return true;
+        }
+
         try {
             const response = await axios.post(API_URL + "refresh/", {
-                refresh: JSON.parse(refreshToken)
+                refresh: JSON.parse(refreshTokenStr)
             });
 
-            // Проверяем наличие токенов в ответе. Имена полей могут отличаться в зависимости от API
+            // Проверяем наличие токенов в ответе
             if (response.data.access) {
                 localStorage.setItem("user", JSON.stringify(response.data.access));
-                localStorage.setItem("refresh", JSON.stringify(response.data.refresh));
+
+                // Обновляем refresh токен, если он есть в ответе
+                if (response.data.refresh) {
+                    localStorage.setItem("refresh", JSON.stringify(response.data.refresh));
+                }
+
+                // Обрабатываем очередь запросов, которые ждали обновления токена
+                failedRequestsQueue.forEach(request => request.onSuccess(response.data.access));
+                failedRequestsQueue = [];
+
                 return true;
             } else if (response.data.access_token) {
                 localStorage.setItem("user", JSON.stringify(response.data.access_token));
-                localStorage.setItem("refresh", JSON.stringify(response.data.refresh_token));
+
+                // Обновляем refresh токен, если он есть в ответе
+                if (response.data.refresh_token) {
+                    localStorage.setItem("refresh", JSON.stringify(response.data.refresh_token));
+                }
+
+                // Обрабатываем очередь запросов, которые ждали обновления токена
+                failedRequestsQueue.forEach(request => request.onSuccess(response.data.access_token));
+                failedRequestsQueue = [];
+
                 return true;
             }
         } catch (error) {
             console.error("Ошибка при обновлении токена:", error);
-            // Если сервер недоступен или вернул ошибку, но у нас всё ещё есть токен,
-            // не выходим, а просто возвращаем false
-            if (axios.isAxiosError(error) && error.response?.status === 500) {
+
+            // Обрабатываем очередь запросов с ошибкой
+            failedRequestsQueue.forEach(request => request.onFailure(error));
+            failedRequestsQueue = [];
+
+            // Если сервер недоступен, не выходим, а просто возвращаем false
+            if (axios.isAxiosError(error) && (error.response?.status === 500 || !error.response)) {
                 console.warn("Сервер временно недоступен. Используем текущий токен.");
+                return false;
+            }
+
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
+                // Если refresh token недействителен, просто возвращаем false
                 return false;
             }
         }
 
-        // Если не смогли обновить токен и нет указания сохранить сессию, выходим
-        logout();
         return false;
     } catch (error) {
         console.error("Ошибка при проверке токена:", error);
-        logout(); // Выход при ошибке проверки токена
+        
+        // Обрабатываем очередь запросов с ошибкой
+        failedRequestsQueue.forEach(request => request.onFailure(error));
+        failedRequestsQueue = [];
+
         return false;
     } finally {
         isRefreshing = false;
     }
-};
-
-export const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("accountType");
 };
 
 export const getCurrentUser = () => {
@@ -101,8 +179,39 @@ export const getCurrentUser = () => {
     return token ? JSON.parse(token) : null;
 };
 
+export const getCurrentUsername = (): string | null => {
+    const token = localStorage.getItem("user");
+    if (!token) return null;
+
+    try {
+        const decodedToken = decodeJwt(JSON.parse(token));
+        return decodedToken.username || null;
+    } catch (e) {
+        console.error('Ошибка при получении имени пользователя:', e);
+        return null;
+    }
+};
+
 export const isAuthenticated = () => {
-    return !!localStorage.getItem("user");
+    const token = localStorage.getItem("user");
+    if (!token) return false;
+
+    try {
+        // Проверяем срок действия токена
+        const parsedToken = JSON.parse(token);
+        if (isTokenExpired(parsedToken)) {
+            // Если токен истек, пытаемся обновить его
+            refreshToken().catch(error => {
+                console.error("Ошибка при автоматическом обновлении токена:", error);
+            });
+            // Возвращаем true, так как процесс обновления токена запущен
+            return true;
+        }
+        return true;
+    } catch (e) {
+        console.error('Ошибка при проверке аутентификации:', e);
+        return false;
+    }
 };
 
 export const isAdmin = () => {
@@ -112,9 +221,9 @@ export const isAdmin = () => {
 
 // Планировщик обновления токена
 const scheduleTokenRefresh = () => {
-    const REFRESH_INTERVAL = 55 * 60 * 1000; // 55 минут
+    const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 минут
 
-    // Очищаем предыдущие интервалы, если они были
+    // Очищаем предыдущие интервалы
     if (tokenRefreshInterval) {
         clearInterval(tokenRefreshInterval);
     }
@@ -123,12 +232,68 @@ const scheduleTokenRefresh = () => {
     tokenRefreshInterval = window.setInterval(() => {
         // Обновляем токен, только если пользователь аутентифицирован
         if (isAuthenticated()) {
-            refreshToken().catch(error => {
-                console.error("Ошибка при плановом обновлении токена:", error);
-            });
+            const token = getCurrentUser();
+            if (token && isTokenExpired(token)) {
+                refreshToken().catch(error => {
+                    console.error("Ошибка при плановом обновлении токена:", error);
+                });
+            }
+        } else {
+            // Если пользователь не аутентифицирован, останавливаем интервал
+            if (tokenRefreshInterval) {
+                clearInterval(tokenRefreshInterval);
+                tokenRefreshInterval = null;
+            }
         }
     }, REFRESH_INTERVAL);
 };
 
-// Запускаем планировщик при загрузке модуля
-scheduleTokenRefresh();
+// Настраиваем axios для автоматического добавления токена и обработки ошибок 401
+export const setupAxiosInterceptors = () => {
+    // Добавляем интерцептор запросов
+    axios.interceptors.request.use(
+        async (config) => {
+            // Проверяем, нужно ли добавлять токен (не добавляем для запросов аутентификации)
+            if (!config.url?.includes(API_URL)) {
+                const token = getCurrentUser();
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+            }
+            return config;
+        },
+        (error) => Promise.reject(error)
+    );
+
+    // Добавляем интерцептор ответов
+    axios.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            // Обрабатываем 401 ошибку
+            if (axios.isAxiosError(error) && error.response?.status === 401 && error.config) {
+                try {
+                    // Пытаемся обновить токен
+                    const refreshed = await refreshToken();
+                    if (refreshed && error.config) {
+                        // Если токен обновлен успешно, повторяем исходный запрос
+                        const token = getCurrentUser();
+                        if (token) {
+                            error.config.headers = error.config.headers || {};
+                            error.config.headers.Authorization = `Bearer ${token}`;
+                        }
+                        return axios(error.config);
+                    }
+                } catch (refreshError) {
+                    console.error('Не удалось обновить токен:', refreshError);
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+};
+
+// Запускаем планировщик и настраиваем axios при загрузке модуля
+if (isAuthenticated()) {
+    scheduleTokenRefresh();
+}
+setupAxiosInterceptors();

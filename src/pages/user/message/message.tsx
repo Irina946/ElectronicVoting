@@ -86,7 +86,11 @@ export const Message = (): JSX.Element => {
             try {
                 const data = await getAccounts(idMeeting.id)
                 const filteredAccounts = data.accounts.filter(account => !account.has_voted)
-                setAccaunts(filteredAccounts)
+                if (informationMeeting?.status !== 5) {
+                    setAccaunts(filteredAccounts)
+                } else {
+                    setAccaunts(data.accounts)
+                }
             } catch (error) {
                 console.error("Error fetching message:", error);
             }

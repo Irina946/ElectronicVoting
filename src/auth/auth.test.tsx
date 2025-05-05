@@ -1,6 +1,17 @@
-import { login, logout, refreshToken, getCurrentUser } from './auth';
+import { login, refreshToken, getCurrentUser, isAuthenticated, isAdmin, decodeJwt, isTokenExpired } from './auth';
 import axios from 'axios';
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+
+// Определяем тип для модуля auth
+interface AuthModule {
+  login: typeof login;
+  refreshToken: typeof refreshToken;
+  getCurrentUser: typeof getCurrentUser;
+  isAuthenticated: typeof isAuthenticated;
+  isAdmin: typeof isAdmin;
+  decodeJwt: typeof decodeJwt;
+  isTokenExpired: typeof isTokenExpired;
+}
 
 // Мокаем axios
 jest.mock('axios');
@@ -20,14 +31,23 @@ Object.defineProperty(window, 'localStorage', {
     value: localStorageMock
 });
 
+// Мокируем atob для тестирования decodeJwt
+global.atob = jest.fn(
+    (str: string) => Buffer.from(str, 'base64').toString('binary')
+) as unknown as typeof global.atob;
+
 describe('Auth Functions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.useFakeTimers();
+
+        // Мокируем функцию isAxiosError в каждом тесте
+        jest.spyOn(axios, 'isAxiosError').mockImplementation(() => false);
     });
 
     afterEach(() => {
         jest.useRealTimers();
+        jest.restoreAllMocks();
     });
 
     describe('login', () => {
@@ -63,16 +83,42 @@ describe('Auth Functions', () => {
         });
     });
 
-    describe('logout', () => {
-        it('должен очистить localStorage', () => {
-            logout();
-            expect(localStorage.clear).toHaveBeenCalled();
-        });
-    });
-
     describe('refreshToken', () => {
-        it('должен успешно обновить токен', async () => {
-            const mockRefreshToken = 'refresh_token';
+        beforeEach(() => {
+            // Устанавливаем для каждого теста новый refresh и access token
+            (localStorage.getItem as jest.Mock).mockImplementation((key) => {
+                if (key === 'refresh') return JSON.stringify('refresh_token');
+                if (key === 'user') return JSON.stringify('access_token');
+                return null;
+            });
+
+            // Мокируем isTokenExpired для разных сценариев
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'isTokenExpired')
+                .mockImplementation(() => true);
+        });
+
+        it('должен успешно обновить токен (формат access/refresh)', async () => {
+            const mockResponse = {
+                data: {
+                    access: 'new_access_token',
+                    refresh: 'new_refresh_token'
+                }
+            };
+
+            mockedAxios.post.mockResolvedValue(mockResponse);
+
+            const result = await refreshToken();
+
+            expect(mockedAxios.post).toHaveBeenCalledWith(
+                'http://localhost:8000/api/token/refresh/',
+                { refresh: 'refresh_token' }
+            );
+            expect(localStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify('new_access_token'));
+            expect(localStorage.setItem).toHaveBeenCalledWith('refresh', JSON.stringify('new_refresh_token'));
+            expect(result).toBe(true);
+        });
+
+        it('должен успешно обновить токен (формат access_token/refresh_token)', async () => {
             const mockResponse = {
                 data: {
                     access_token: 'new_access_token',
@@ -80,65 +126,171 @@ describe('Auth Functions', () => {
                 }
             };
 
-            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(mockRefreshToken));
             mockedAxios.post.mockResolvedValue(mockResponse);
 
             const result = await refreshToken();
 
             expect(mockedAxios.post).toHaveBeenCalledWith(
-                'http://localhost:8000/api/token/refresh',
-                { refresh: mockRefreshToken }
+                'http://localhost:8000/api/token/refresh/',
+                { refresh: 'refresh_token' }
             );
             expect(localStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify('new_access_token'));
             expect(localStorage.setItem).toHaveBeenCalledWith('refresh', JSON.stringify('new_refresh_token'));
             expect(result).toBe(true);
         });
 
+        it('должен вернуть true, если токен не просрочен', async () => {
+            // Переопределяем isTokenExpired только для этого теста
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'isTokenExpired')
+                .mockImplementation(() => false);
+
+            const result = await refreshToken();
+
+            // Проверяем, что запрос на обновление не был вызван
+            expect(mockedAxios.post).not.toHaveBeenCalled();
+            expect(result).toBe(true);
+        });
+
         it('должен обработать ошибку при отсутствии refresh токена', async () => {
-            (localStorage.getItem as jest.Mock).mockReturnValue(null);
+            (localStorage.getItem as jest.Mock).mockImplementation((key) => {
+                if (key === 'user') return JSON.stringify('access_token');
+                return null;
+            });
 
             const result = await refreshToken();
 
             expect(result).toBe(false);
-            expect(localStorage.clear).toHaveBeenCalled();
+            // Теперь не ожидаем вызова localStorage.removeItem, так как функция logout удалена
         });
 
-        it('должен обработать ошибку при неудачном обновлении токена', async () => {
-            const mockRefreshToken = 'refresh_token';
-            const error = new Error('Ошибка обновления токена');
-            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(mockRefreshToken));
+        it('должен обработать ошибку при отсутствии access токена', async () => {
+            (localStorage.getItem as jest.Mock).mockImplementation((key) => {
+                if (key === 'refresh') return JSON.stringify('refresh_token');
+                return null;
+            });
+
+            const result = await refreshToken();
+
+            expect(result).toBe(false);
+            // Теперь не ожидаем вызова localStorage.removeItem, так как функция logout удалена
+        });
+
+        it('должен обработать ошибку 500 от сервера без выхода', async () => {
+            const error = new Error('Internal Server Error');
             mockedAxios.post.mockRejectedValue(error);
 
+            // Возвращаем true для этого конкретного теста
+            jest.spyOn(axios, 'isAxiosError').mockImplementation(() => true);
+
+            // Симулируем проверку статуса ответа
+            Object.defineProperty(error, 'response', {
+                value: { status: 500 }
+            });
+
             const result = await refreshToken();
 
             expect(result).toBe(false);
-            expect(localStorage.clear).toHaveBeenCalled();
+            expect(localStorage.removeItem).not.toHaveBeenCalled();
         });
 
-        it('должен вернуть false если нет access_token в ответе', async () => {
-            const mockRefreshToken = 'refresh_token';
-            const mockResponse = {
-                data: {
-                    refresh_token: 'new_refresh_token'
-                }
-            };
+        it('должен обработать ошибку 401 без выхода из системы', async () => {
+            const error = new Error('Unauthorized');
+            mockedAxios.post.mockRejectedValue(error);
 
-            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(mockRefreshToken));
-            mockedAxios.post.mockResolvedValue(mockResponse);
+            // Устанавливаем isAxiosError в true для этого теста
+            jest.spyOn(axios, 'isAxiosError').mockImplementation(() => true);
+
+            // Симулируем 401 ответ
+            Object.defineProperty(error, 'response', {
+                value: { status: 401 }
+            });
 
             const result = await refreshToken();
+
+            expect(result).toBe(false);
+            // Теперь не ожидаем вызова localStorage.removeItem, так как функция logout удалена
+        });
+
+        it('должен обработать другие ошибки без выхода', async () => {
+            const error = new Error('Ошибка обновления токена');
+            mockedAxios.post.mockRejectedValue(error);
+
+            // Убедимся, что isAxiosError вернет false для этого теста
+            jest.spyOn(axios, 'isAxiosError').mockImplementation(() => false);
+
+            const result = await refreshToken();
+
+            expect(result).toBe(false);
+            // Теперь не ожидаем вызова localStorage.removeItem, так как функция logout удалена
+        });
+    });
+
+    describe('decodeJwt', () => {
+        it('должен корректно декодировать JWT токен', () => {
+            // Создаем фейковый JWT с известной полезной нагрузкой
+            const payload = { username: 'test_user', exp: 1234567890 };
+            const mockToken = `header.${btoa(JSON.stringify(payload))}.signature`;
+
+            const result = decodeJwt(mockToken);
+
+            expect(result).toEqual(payload);
+        });
+
+        it('должен вернуть пустой объект при ошибке декодирования', () => {
+            const invalidToken = 'invalid.token';
+
+            // Мокируем console.error, чтобы не засорять вывод тестов
+            jest.spyOn(console, 'error').mockImplementation(() => { });
+
+            const result = decodeJwt(invalidToken);
+
+            expect(result).toEqual({});
+        });
+    });
+
+    describe('isTokenExpired', () => {
+        it('должен вернуть true для просроченного токена', () => {
+            // Устанавливаем текущее время для предсказуемости
+            jest.useFakeTimers().setSystemTime(new Date('2023-01-01').getTime());
+
+            // Создаем маркер времени, который уже истек (30 секунд назад)
+            const expiredTime = Math.floor(Date.now() / 1000) - 30;
+            const mockJwtPayload = { exp: expiredTime };
+
+            // Мокируем decodeJwt
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'decodeJwt')
+                .mockImplementation(() => mockJwtPayload);
+
+            const result = isTokenExpired('mock_token');
+
+            expect(result).toBe(true);
+        });
+
+        it('должен вернуть false для действительного токена', () => {
+            // Устанавливаем текущее время для предсказуемости
+            jest.useFakeTimers().setSystemTime(new Date('2023-01-01').getTime());
+
+            // Создаем маркер времени, который еще не истек (60 секунд в будущем)
+            const validTime = Math.floor(Date.now() / 1000) + 60;
+            const mockJwtPayload = { exp: validTime };
+
+            // Мокируем decodeJwt
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'decodeJwt')
+                .mockImplementation(() => mockJwtPayload);
+
+            const result = isTokenExpired('mock_token');
 
             expect(result).toBe(false);
         });
 
-        it('должен обработать ошибку при парсинге JSON', async () => {
-            const invalidJson = 'invalid json';
-            (localStorage.getItem as jest.Mock).mockReturnValue(invalidJson);
+        it('должен вернуть true если отсутствует поле exp', () => {
+            // Мокируем decodeJwt для возврата объекта без exp
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'decodeJwt')
+                .mockImplementation(() => ({}));
 
-            const result = await refreshToken();
+            const result = isTokenExpired('mock_token');
 
-            expect(result).toBe(false);
-            expect(localStorage.clear).toHaveBeenCalled();
+            expect(result).toBe(true);
         });
     });
 
@@ -161,41 +313,67 @@ describe('Auth Functions', () => {
         });
     });
 
-    describe('scheduleTokenRefresh', () => {
-        it('должен успешно обновить токен по расписанию', async () => {
-            const mockResponse = {
-                data: {
-                    access_token: 'new_access_token',
-                    refresh_token: 'new_refresh_token'
-                }
-            };
+    describe('isAuthenticated', () => {
+        it('должен вернуть true если токен существует и не просрочен', () => {
+            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify('valid_token'));
 
-            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify('refresh_token'));
-            mockedAxios.post.mockResolvedValue(mockResponse);
+            // Мокируем isTokenExpired чтобы вернуть false (токен действителен)
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'isTokenExpired')
+                .mockImplementation(() => false);
 
-            // Запускаем функцию обновления токена
-            const refreshPromise = refreshToken();
-            jest.advanceTimersByTime(55 * 60 * 1000);
+            const result = isAuthenticated();
 
-            await refreshPromise;
-
-            expect(mockedAxios.post).toHaveBeenCalled();
-            expect(localStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify('new_access_token'));
-            expect(localStorage.setItem).toHaveBeenCalledWith('refresh', JSON.stringify('new_refresh_token'));
+            expect(result).toBe(true);
         });
 
-        it('должен обработать ошибку при обновлении токена по расписанию', async () => {
-            const error = new Error('Ошибка обновления токена');
-            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify('refresh_token'));
-            mockedAxios.post.mockRejectedValue(error);
+        it('должен вернуть true и инициировать обновление, если токен просрочен', () => {
+            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify('expired_token'));
 
-            const refreshPromise = refreshToken();
-            jest.advanceTimersByTime(55 * 60 * 1000);
+            // Мокируем isTokenExpired чтобы вернуть true (токен просрочен)
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'isTokenExpired')
+                .mockImplementation(() => true);
 
-            await refreshPromise;
+            // Мокируем refreshToken чтобы избежать реального вызова
+            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'refreshToken')
+                .mockImplementation(() => Promise.resolve(true));
 
-            expect(mockedAxios.post).toHaveBeenCalled();
-            expect(localStorage.clear).toHaveBeenCalled();
+            const result = isAuthenticated();
+
+            expect(result).toBe(true);
+        });
+
+        it('должен вернуть false если токен отсутствует', () => {
+            (localStorage.getItem as jest.Mock).mockReturnValue(null);
+
+            const result = isAuthenticated();
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('isAdmin', () => {
+        it('должен вернуть true если пользователь администратор', () => {
+            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(true));
+
+            const result = isAdmin();
+
+            expect(result).toBe(true);
+        });
+
+        it('должен вернуть false если пользователь не администратор', () => {
+            (localStorage.getItem as jest.Mock).mockReturnValue(JSON.stringify(false));
+
+            const result = isAdmin();
+
+            expect(result).toBe(false);
+        });
+
+        it('должен вернуть false если информация о пользователе отсутствует', () => {
+            (localStorage.getItem as jest.Mock).mockReturnValue(null);
+
+            const result = isAdmin();
+
+            expect(result).toBe(false);
         });
     });
 }); 

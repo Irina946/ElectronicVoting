@@ -1,12 +1,11 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { login as authLogin, logout as authLogout, isAuthenticated as checkAuth, isAdmin as checkAdmin } from './auth';
+import { login as authLogin, isAuthenticated as checkAuth, isAdmin as checkAdmin } from './auth';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
     isAuthenticated: boolean;
     isAdmin: boolean;
     login: (username: string, password: string) => Promise<{ success: boolean; error?: unknown }>;
-    logout: () => void;
     loading: boolean;
 }
 
@@ -15,7 +14,6 @@ const AuthContext = createContext<AuthContextType>({
     isAuthenticated: false,
     isAdmin: false,
     login: async () => ({ success: false }),
-    logout: () => { },
     loading: true
 });
 
@@ -84,20 +82,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
-    // Функция выхода из системы
-    const logout = () => {
-        authLogout();
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-        navigate('/');
-    };
-
     // Предоставляем значения контекста для всего приложения
     const value = {
         isAuthenticated,
         isAdmin,
         login,
-        logout,
         loading
     };
 

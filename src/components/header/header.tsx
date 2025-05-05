@@ -1,7 +1,6 @@
 import { matchPath, useLocation, useNavigate, useParams } from "react-router";
 import headerTop from "../../assets/header1.svg"
 import headerCenter from "../../assets/header2.svg"
-import { useAuth } from "../../auth/AuthContext";
 
 interface RouteConfig {
     path: string;
@@ -42,7 +41,6 @@ export const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const params = useParams();
-    const { logout, isAdmin } = useAuth();
 
     const currentRoute = routes.find(route => matchPath(route.path, location.pathname));
 
@@ -63,11 +61,6 @@ export const Header = () => {
     const handleNavigation = (path: string) => {
         const pathWithParams = getPathWithParams(path);
         navigate(pathWithParams);
-    };
-
-    // Обработчик для выхода из системы
-    const handleLogout = () => {
-        logout();
     };
 
     // Определяем хлебные крошки для текущего маршрута
@@ -123,20 +116,7 @@ export const Header = () => {
 
     return (
         <div className="flex flex-col justify-center items-center">
-            <div className="w-full flex justify-between items-center">
-                <img src={headerTop} alt="Header" className="flex-1" />
-                <div className="px-4 flex items-center">
-                    <div className="text-base text-(--color-text) mr-2">
-                        {isAdmin ? 'Администратор' : 'Пользователь'}
-                    </div>
-                    <button 
-                        onClick={handleLogout}
-                        className="bg-(--color-red) text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors"
-                    >
-                        Выйти
-                    </button>
-                </div>
-            </div>
+            <img src={headerTop} alt="Header" />
             <div className="bg-(--color-red) w-[100%] flex justify-center">
                 <img src={headerCenter} alt="Header" />
             </div>
