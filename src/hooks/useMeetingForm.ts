@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { addTimedate, getTimeFromString, mapMeetingCreateToFormStateEdit } from "../utils/meeting";
 import { IFormState } from "../utils/interfaces";
 import { IAgendaCreate, IAgendaSent, IListCompany } from "../requests/interfaces";
@@ -7,38 +7,42 @@ import { getDraftForId, getListCompany, postMeetingCreate, putDraft } from "../r
 const defaultDate = new Date().toISOString().split("T")[0];
 const defaultTime = getTimeFromString("14:00");
 
-export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
-    const [formState, setFormState] = useState<IFormState>({
-        selectedType: { value: false, repeat: false },
-        selectedForm: false,
-        selectedIssuer: 0,
-        selectedPlace: '',
-        checkedEarlyRegistration: false,
-        selectedDateAcceptance: defaultDate,
-        selectedDateDefinition: defaultDate,
-        selectedDateRegisterStart: defaultDate,
-        selectedTimeRegisterStart: defaultTime,
-        selectedTimeRegisterEnd: defaultTime,
-        selectedDateMeeting: defaultDate,
-        selectedTimeMeetingFrom: defaultTime,
-        selectedTimeMeetingTo: defaultTime,
-        selectedDateVoting: defaultDate,
-        selectedTimeVoting: defaultTime,
-        agendas: [],
-        files: []
-    });
+// Создаем начальное состояние формы вне компонента, чтобы избежать повторных созданий
+const initialFormState: IFormState = {
+    selectedType: { value: false, repeat: false },
+    selectedForm: false,
+    selectedIssuer: 0,
+    selectedPlace: '',
+    checkedEarlyRegistration: false,
+    selectedDateAcceptance: defaultDate,
+    selectedDateDefinition: defaultDate,
+    selectedDateRegisterStart: defaultDate,
+    selectedTimeRegisterStart: defaultTime,
+    selectedTimeRegisterEnd: defaultTime,
+    selectedDateMeeting: defaultDate,
+    selectedTimeMeetingFrom: defaultTime,
+    selectedTimeMeetingTo: defaultTime,
+    selectedDateVoting: defaultDate,
+    selectedTimeVoting: defaultTime,
+    agendas: [],
+    files: []
+};
 
+export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
+    const [formState, setFormState] = useState<IFormState>(() => ({ ...initialFormState }));
     const [listCompany, setListCompany] = useState<IListCompany[]>([]);
     const [isOpenAlert, setIsOpenAlert] = useState(false);
 
-    const updateState = <K extends keyof IFormState>(key: K, value: IFormState[K]) => {
+    // Оптимизированное обновление состояния с useCallback
+    const updateState = useCallback(<K extends keyof IFormState>(key: K, value: IFormState[K]) => {
         setFormState(prev => ({
             ...prev,
             [key]: value
         }));
-    };
+    }, []);
 
-    const handleSaveMeeting = async () => {
+    // Обработчик сохранения встречи с useCallback
+    const handleSaveMeeting = useCallback(async () => {
         const getTime = (time: Date | string): Date =>
             typeof time === "string" ? new Date(time) : time;
 
@@ -80,28 +84,46 @@ export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
         } catch (err) {
             console.error("Ошибка при сохранении встречи:", err);
         }
-    };
+    }, [formState, idMessage, isEditMode]);
 
-    const handleAgendaAdd = (question: IAgendaCreate) => {
-        updateState("agendas", [...formState.agendas, { ...question }]);
-    };
+    // Обработчики для работы с повесткой с useCallback
+    const handleAgendaAdd = useCallback((question: IAgendaCreate) => {
+        setFormState(prev => ({
+            ...prev,
+            agendas: [...prev.agendas, { ...question }]
+        }));
+    }, []);
 
-    const handleAgendaDelete = (uniqueId: number) => {
-        updateState("agendas", formState.agendas.filter(a => a.questionId !== uniqueId));
-    };
+    const handleAgendaDelete = useCallback((uniqueId: number) => {
+        setFormState(prev => ({
+            ...prev,
+            agendas: prev.agendas.filter(a => a.questionId !== uniqueId)
+        }));
+    }, []);
 
-    const handleAgendaUpdate = (updated: IAgendaCreate, index: number) => {
-        const updatedAgendas = [...formState.agendas];
-        updatedAgendas[index] = updated;
-        updateState("agendas", updatedAgendas);
-    };
+    const handleAgendaUpdate = useCallback((updated: IAgendaCreate, index: number) => {
+        setFormState(prev => {
+            const updatedAgendas = [...prev.agendas];
+            updatedAgendas[index] = updated;
+            return {
+                ...prev,
+                agendas: updatedAgendas
+            };
+        });
+    }, []);
 
-    const updateTimeField = (key: keyof IFormState, hours: number, minutes: number) => {
-        const newDate = new Date(formState[key] as Date);
-        newDate.setHours(hours, minutes, 0, 0);
-        updateState(key, newDate);
-    };
+    const updateTimeField = useCallback((key: keyof IFormState, hours: number, minutes: number) => {
+        setFormState(prev => {
+            const newDate = new Date(prev[key] as Date);
+            newDate.setHours(hours, minutes, 0, 0);
+            return {
+                ...prev,
+                [key]: newDate
+            };
+        });
+    }, []);
 
+    // Загрузка данных при монтировании компонента
     useEffect(() => {
         const fetchCompanies = async () => {
             try {
@@ -128,7 +150,8 @@ export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
         fetchMeeting();
     }, [idMessage, isEditMode]);
 
-    return {
+    // Используем useMemo для возвращаемого объекта, чтобы избежать перерисовок
+    return useMemo(() => ({
         formState,
         updateState,
         listCompany,
@@ -139,5 +162,15 @@ export const useMeetingForm = (idMessage: number, isEditMode: boolean) => {
         handleAgendaDelete,
         handleAgendaUpdate,
         updateTimeField
-    };
+    }), [
+        formState,
+        updateState,
+        listCompany,
+        isOpenAlert,
+        handleSaveMeeting,
+        handleAgendaAdd,
+        handleAgendaDelete,
+        handleAgendaUpdate,
+        updateTimeField
+    ]);
 };

@@ -1,8 +1,7 @@
-import { JSX, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { InputAuthorization } from "../../components/input/inputAuthorization";
-import { useNavigate } from "react-router";
-import { login } from "../../auth/auth";
-
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 
 const validateInput = (value: string): string | null => {
     const isPhone = /^\+7\d{10}$/.test(value);
@@ -21,14 +20,26 @@ const validateInput = (value: string): string | null => {
 
 
 export const Authorization = (): JSX.Element => {
-
-    const [isPasswordView, setIsPasswordView] = useState(false)
-    const [number, setNumber] = useState('')
-    const [password, setPassword] = useState('')
+    const [isPasswordView, setIsPasswordView] = useState(false);
+    const [number, setNumber] = useState('');
+    const [password, setPassword] = useState('');
     const [numberError, setNumberError] = useState<string | undefined>(undefined);
     const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
     const [generalError, setGeneralError] = useState<string | undefined>(undefined);
-    const navigate = useNavigate()
+    
+    const { login, loading, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Используем useEffect для перенаправления вместо выполнения во время рендеринга
+    useEffect(() => {
+        // Если пользователь уже авторизован, перенаправляем его
+        if (isAuthenticated) {
+            const from = location.state?.from?.pathname;
+            const targetPath = from || '/user';
+            navigate(targetPath, { replace: true });
+        }
+    }, [isAuthenticated, navigate, location.state?.from?.pathname]);
 
     const handleClickButton = async () => {
         const numberValidationError = validateInput(number);
@@ -43,16 +54,13 @@ export const Authorization = (): JSX.Element => {
         try {
             const result = await login(number, password);
 
-            if (result.success) {
-                navigate(result.isStaff ? '/admin' : '/user');
-                window.location.reload();
-            } else {
+            if (!result.success) {
                 setGeneralError('Неверный номер телефона или пароль');
             }
         } catch (error) {
             setGeneralError(`Ошибка при входе: ${error}`);
         }
-    }
+    };
 
 
     return (
@@ -96,12 +104,14 @@ export const Authorization = (): JSX.Element => {
                 {generalError ? <div className="text-red-600 text-sm">{generalError}</div> : <></>}
             </div>
             <button
-                className="cursor-pointer self-end mr-[20%] mt-14 border-[5px] border-[#8b8a8a] rounded-[10px] w-[125px] h-16 hover:border-orange-400"
+                className={`cursor-pointer self-end mr-[20%] mt-14 border-[5px] border-[#8b8a8a] rounded-[10px] w-[125px] h-16 hover:border-orange-400 ${
+                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 onClick={handleClickButton}
+                disabled={loading}
             >
-                Войти
+                {loading ? 'Вход...' : 'Войти'}
             </button>
-
         </div>
-    )
-}
+    );
+};
