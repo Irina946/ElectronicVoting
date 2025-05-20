@@ -1,0 +1,67 @@
+/* Styles to minimize Cumulative Layout Shift */
+
+/* Резервируем место для изображений, предотвращая CLS */
+img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: attr(width) / attr(height);
+  display: block;
+}
+
+/* Фиксированные размеры для header изображений */
+img[src*="header1.svg"] {
+  width: 1050px;
+  height: 120px;
+}
+
+img[src*="header2.svg"] {
+  width: 1440px;
+  height: 50px;
+}
+
+/* Фиксированный размер для main */
+main {
+  min-height: 400px;
+  width: 100%;
+  contain: layout;
+}
+
+/* Фиксированная высота для основной шапки */
+.bg-\(\-\-color-gray\).w-\[100\%\].h-\[50px\] {
+  height: 50px !important;
+  min-height: 50px;
+  overflow: hidden;
+  contain: layout;
+}
+
+/* Резервируем место для компонентов */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Устанавливаем скроллбар по умолчанию */
+html {
+  overflow-y: scroll;
+}
+
+/* Для контейнеров загрузки */
+.loading-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Контейнер для ошибок */
+.error-container {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+}

@@ -19,36 +19,29 @@ declare global {
     }
 }
 
-// Декодирование JWT без сторонних библиотек
-export const decodeJwt = (token: string): { exp?: number; username?: string } => {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error('Ошибка при декодировании токена:', e);
-        return {};
-    }
-};
-
 // Проверка истечения срока действия токена
 export const isTokenExpired = (token: string): boolean => {
     try {
-        const decodedToken = decodeJwt(token);
-        if (!decodedToken.exp) return true;
+        // Проверяем наличие токена
+        if (!token) return true;
 
-        // Получаем текущее время в секундах
+        // Декодируем JWT токен
+        const base64Url = token.split('.')[1];
+        if (!base64Url) return true;
+
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        
+        // Проверяем наличие поля exp
+        if (!payload.exp) return true;
+
+        // Проверяем срок действия токена
         const currentTime = Math.floor(Date.now() / 1000);
-
-        // Добавляем небольшой запас времени (30 секунд)
-        return decodedToken.exp < currentTime + 30;
+        return payload.exp < currentTime;
     } catch (e) {
         console.error('Ошибка при проверке срока действия токена:', e);
         return true;
@@ -63,7 +56,7 @@ export const login = async (username: string, password: string) => {
         if (access && refresh !== undefined && is_staff !== undefined) {
             localStorage.setItem("user", JSON.stringify(access));
             localStorage.setItem("refresh", JSON.stringify(refresh));
-            localStorage.setItem("accountType", JSON.stringify(!!is_staff));
+            localStorage.setItem("accountType", JSON.stringify(is_staff ? 'admin' : 'user'));
 
             // Запускаем процесс автоматического обновления токенов
             scheduleTokenRefresh();
@@ -180,16 +173,8 @@ export const getCurrentUser = () => {
 };
 
 export const getCurrentUsername = (): string | null => {
-    const token = localStorage.getItem("user");
-    if (!token) return null;
-
-    try {
-        const decodedToken = decodeJwt(JSON.parse(token));
-        return decodedToken.username || null;
-    } catch (e) {
-        console.error('Ошибка при получении имени пользователя:', e);
-        return null;
-    }
+    // Возвращаем null, так как мы больше не декодируем JWT
+    return null;
 };
 
 export const isAuthenticated = () => {
@@ -197,7 +182,7 @@ export const isAuthenticated = () => {
     if (!token) return false;
 
     try {
-        // Проверяем срок действия токена
+        // Проверяем наличие токена
         const parsedToken = JSON.parse(token);
         if (isTokenExpired(parsedToken)) {
             // Если токен истек, пытаемся обновить его

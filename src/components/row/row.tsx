@@ -189,12 +189,12 @@ export const Row = (props: IRowProps) => {
                             placeholder="Текст вопроса"
                         />
                         <div>
-                            <div className="mb-[7px]">Добавьте кандидата/подвопрос:</div>
+                            <div className="mb-[14px]">Добавьте кандидата/подвопрос:</div>
                             {candidates.map((candidate, index) =>
                             (
                                 <div key={`candidate-${index}`} className="flex items-center mb-3.5">
-                                    <button className="cursor-pointer mr-[7px]" onClick={() => onClickRemoveCandidate(index)}>
-                                        <img src={minus} alt="Удалить кандидата" />
+                                    <button className="cursor-pointer mr-[7px]" onClick={() => onClickRemoveCandidate(index)} >
+                                        <img src={minus} alt="Удалить кандидата" width={15} height={15} />
                                     </button>
                                     <Input
                                         value={candidate.detail_text}
@@ -205,8 +205,8 @@ export const Row = (props: IRowProps) => {
 
                             )
                             )}
-                            <button onClick={onClickAddCanditate} className="cursor-pointer">
-                                <img src={plus} />
+                            <button onClick={onClickAddCanditate} className="cursor-pointer w-[18px] h-[18px]">
+                                <img src={plus} width={18} height={18} />
                             </button>
                         </div>
                         <TextArea

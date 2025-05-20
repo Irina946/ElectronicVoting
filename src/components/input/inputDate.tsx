@@ -222,11 +222,16 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
                 placeholder="ДД.ММ.ГГГГ"
 
             />
-            <img
-                src={calendar}
-                alt="Calendar"
-                className="absolute left-[103px] top-[5px] cursor-pointer"
-                onClick={() => setIsCalendarOpen(true)} />
+            <div className="absolute left-[103px] top-[5px] cursor-pointer">
+                <img
+                    src={calendar}
+                    alt="Calendar"
+                    className="absolute cursor-pointer"
+                    onClick={() => setIsCalendarOpen(true)}
+                />
+            </div>
+
+
             {isCalendarOpen && (
                 <div ref={calendarRef}
                     className="absolute 

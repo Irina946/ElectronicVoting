@@ -1,6 +1,6 @@
 import { FC, ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { isAdmin, isAuthenticated } from './auth';
+import { isAuthenticated } from './auth';
 
 interface PrivateRouteProps {
   children: ReactNode;
@@ -21,7 +21,8 @@ export const PrivateRoute: FC<PrivateRouteProps> = ({ children, requiredRole }) 
       try {
         // Проверяем токен и роль
         const authenticated = isAuthenticated();
-        const adminStatus = isAdmin();
+        const accountType = localStorage.getItem("accountType");
+        const userRole = accountType ? JSON.parse(accountType) : 'user';
         
         // Если пользователь не аутентифицирован, нет доступа
         if (!authenticated) {
@@ -32,9 +33,7 @@ export const PrivateRoute: FC<PrivateRouteProps> = ({ children, requiredRole }) 
         
         // Проверка роли, если она требуется
         if (requiredRole) {
-          const hasRequiredRole = 
-            (requiredRole === 'admin' && adminStatus) || 
-            (requiredRole === 'user' && !adminStatus);
+          const hasRequiredRole = requiredRole === userRole;
           
           if (!hasRequiredRole) {
             setHasAccess(false);
@@ -62,8 +61,17 @@ export const PrivateRoute: FC<PrivateRouteProps> = ({ children, requiredRole }) 
   }
 
   if (!hasAccess) {
-    // Если пользователь не аутентифицирован или не имеет нужной роли, перенаправляем на страницу входа
-    return <Navigate to="/" state={{ from: location }} replace />;
+    // Если пользователь не аутентифицирован, перенаправляем на страницу входа
+    if (!isAuthenticated()) {
+      return <Navigate to="/" state={{ from: location }} replace />;
+    }
+    
+    // Если пользователь аутентифицирован, но не имеет нужной роли,
+    // перенаправляем на соответствующую страницу
+    const accountType = localStorage.getItem("accountType");
+    const userRole = accountType ? JSON.parse(accountType) : 'user';
+    
+    return <Navigate to={`/${userRole}`} replace />;
   }
 
   // Если пользователь аутентифицирован и имеет нужную роль, показываем защищенный контент

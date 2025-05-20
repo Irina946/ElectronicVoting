@@ -37,7 +37,32 @@ export const NewMessage = (): JSX.Element => {
     
     const [isOpenModal, setIsOpenModal] = useState(false);
     const [checked, setChecked] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
 
+    const validateForm = (): boolean => {
+        if (!formState.selectedIssuer) {
+            setErrorMessage("Выберите эмитента");
+            return false;
+        }
+        if (!formState.selectedPlace) {
+            setErrorMessage("Введите место проведения собрания");
+            return false;
+        }
+        return true;
+    };
+
+    const handleSave = async () => {
+        setErrorMessage(undefined);
+        if (!validateForm()) {
+            return;
+        }
+        try {
+            await handleSaveMeeting();
+        } catch (error: unknown) {
+            setErrorMessage("Ошибка при сохранении сообщения");
+            console.error("Ошибка при сохранении:", error);
+        }
+    };
 
     const handleExit = () => {
         navigate('/admin');
@@ -255,7 +280,7 @@ export const NewMessage = (): JSX.Element => {
                 <InputFile onFileSelected={(e) => updateState('files', [...(formState.files || []), e] as File[])} />
                 <div className="flex justify-center items-center mt-7 gap-[275px]">
                     <Button title="Выйти без сохранения" onClick={() => setIsOpenModal(true)} color="empty" />
-                    <Button title="Сохранить сообщение" onClick={handleSaveMeeting} color="yellow" />
+                    <Button title="Сохранить сообщение" onClick={handleSave} color="yellow" />
                 </div>
             </div>
             {isOpenModal && <Modal onClose={() => setIsOpenModal(false)} visible={isOpenModal} type="warning">
@@ -270,6 +295,7 @@ export const NewMessage = (): JSX.Element => {
 
             </Modal>}
             {isOpenAlert && <Alert onClose={() => setIsOpenAlert(false)} message="Сообщение сохранено " />}
+            {errorMessage && <Alert onClose={() => setErrorMessage(undefined)} message={errorMessage} />}
         </div>
     )
 }

@@ -23,6 +23,7 @@ export const RowVotingCandidatesCumulative = (props: RowVotingProps): JSX.Elemen
     const [candidateVotes, setCandidateVotes] = useState<{ [candidate: string]: number }>(initialVotes);
     const [newTotalVotes, setNewTotalVotes] = useState(totalVotes);
 
+
     useEffect(() => {
         if (selectedVote === "ЗА") {
             onVoteChange(agenda.question_id, candidateVotes)
@@ -84,9 +85,9 @@ export const RowVotingCandidatesCumulative = (props: RowVotingProps): JSX.Elemen
                     <div className="p-3.5 border-r-[0.5px]">
                         <div className="flex justify-between items-center">
                             {/* <div className="mb-3.5 ">{agenda.materials.map((material) => material.name)}</div> */}
-                            <div className="w-[270px] flex gap-3.5 items-center">
+                            <div className="w-[280px] flex gap-3.5 items-center">
                                 <div>Количество кумулятивных голосов:</div>
-                                <div className="border-[0.5px] border-black bg-(--color-gray) w-[40px] py-[5px] px-2 text-center">
+                                <div className="border-[0.5px] border-black bg-(--color-gray) w-[40px] py-[5px] text-center">
                                     {newTotalVotes}
                                 </div>
                             </div>
@@ -101,6 +102,8 @@ export const RowVotingCandidatesCumulative = (props: RowVotingProps): JSX.Elemen
                                     src={arrow}
                                     alt="Стрелка для открытия"
                                     className={arrowRotate[agenda.question_id] ? 'rotate-180' : ''}
+                                    width={21}
+                                    height={12}
                                 />
                             </button>
                         </div>

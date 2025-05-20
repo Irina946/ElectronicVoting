@@ -1,16 +1,15 @@
-import { login, refreshToken, getCurrentUser, isAuthenticated, isAdmin, decodeJwt, isTokenExpired } from './auth';
+import { login, refreshToken, getCurrentUser, isAuthenticated, isAdmin, isTokenExpired } from './auth';
 import axios from 'axios';
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 // Определяем тип для модуля auth
 interface AuthModule {
-  login: typeof login;
-  refreshToken: typeof refreshToken;
-  getCurrentUser: typeof getCurrentUser;
-  isAuthenticated: typeof isAuthenticated;
-  isAdmin: typeof isAdmin;
-  decodeJwt: typeof decodeJwt;
-  isTokenExpired: typeof isTokenExpired;
+    login: typeof login;
+    refreshToken: typeof refreshToken;
+    getCurrentUser: typeof getCurrentUser;
+    isAuthenticated: typeof isAuthenticated;
+    isAdmin: typeof isAdmin;
+    isTokenExpired: typeof isTokenExpired;
 }
 
 // Мокаем axios
@@ -69,7 +68,7 @@ describe('Auth Functions', () => {
             );
             expect(localStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify('access_token'));
             expect(localStorage.setItem).toHaveBeenCalledWith('refresh', JSON.stringify('refresh_token'));
-            expect(localStorage.setItem).toHaveBeenCalledWith('accountType', JSON.stringify(true));
+            expect(localStorage.setItem).toHaveBeenCalledWith('accountType', JSON.stringify('admin'));
             expect(result).toEqual({ success: true, isStaff: true });
         });
 
@@ -225,70 +224,30 @@ describe('Auth Functions', () => {
         });
     });
 
-    describe('decodeJwt', () => {
-        it('должен корректно декодировать JWT токен', () => {
-            // Создаем фейковый JWT с известной полезной нагрузкой
-            const payload = { username: 'test_user', exp: 1234567890 };
-            const mockToken = `header.${btoa(JSON.stringify(payload))}.signature`;
-
-            const result = decodeJwt(mockToken);
-
-            expect(result).toEqual(payload);
-        });
-
-        it('должен вернуть пустой объект при ошибке декодирования', () => {
-            const invalidToken = 'invalid.token';
-
-            // Мокируем console.error, чтобы не засорять вывод тестов
-            jest.spyOn(console, 'error').mockImplementation(() => { });
-
-            const result = decodeJwt(invalidToken);
-
-            expect(result).toEqual({});
-        });
-    });
-
     describe('isTokenExpired', () => {
         it('должен вернуть true для просроченного токена', () => {
-            // Устанавливаем текущее время для предсказуемости
-            jest.useFakeTimers().setSystemTime(new Date('2023-01-01').getTime());
-
-            // Создаем маркер времени, который уже истек (30 секунд назад)
-            const expiredTime = Math.floor(Date.now() / 1000) - 30;
-            const mockJwtPayload = { exp: expiredTime };
-
-            // Мокируем decodeJwt
-            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'decodeJwt')
-                .mockImplementation(() => mockJwtPayload);
-
-            const result = isTokenExpired('mock_token');
+            // Создаем просроченный токен (exp в прошлом)
+            const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzI1MjgwMDAsImlhdCI6MTY3MjUyODAwMH0.mock_signature';
+            
+            const result = isTokenExpired(expiredToken);
 
             expect(result).toBe(true);
         });
 
         it('должен вернуть false для действительного токена', () => {
-            // Устанавливаем текущее время для предсказуемости
-            jest.useFakeTimers().setSystemTime(new Date('2023-01-01').getTime());
-
-            // Создаем маркер времени, который еще не истек (60 секунд в будущем)
-            const validTime = Math.floor(Date.now() / 1000) + 60;
-            const mockJwtPayload = { exp: validTime };
-
-            // Мокируем decodeJwt
-            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'decodeJwt')
-                .mockImplementation(() => mockJwtPayload);
-
-            const result = isTokenExpired('mock_token');
+            // Создаем валидный токен (exp в далеком будущем - 2030 год)
+            const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE5MTI0MjgwMDAsImlhdCI6MTY3MjUyODAwMH0.mock_signature';
+            
+            const result = isTokenExpired(validToken);
 
             expect(result).toBe(false);
         });
 
         it('должен вернуть true если отсутствует поле exp', () => {
-            // Мокируем decodeJwt для возврата объекта без exp
-            jest.spyOn(jest.requireActual<AuthModule>('./auth'), 'decodeJwt')
-                .mockImplementation(() => ({}));
-
-            const result = isTokenExpired('mock_token');
+            // Создаем токен без поля exp
+            const tokenWithoutExp = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NzI1MjgwMDB9.mock_signature';
+            
+            const result = isTokenExpired(tokenWithoutExp);
 
             expect(result).toBe(true);
         });

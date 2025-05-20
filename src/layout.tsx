@@ -9,6 +9,22 @@ import { performanceMonitor } from './utils/performance';
 const MemoizedHeader = memo(Header);
 const MemoizedFooter = memo(Footer);
 
+// Стили для предотвращения CLS
+const layoutStyles = {
+    container: {
+        display: 'flex',
+        flexDirection: 'column' as const,
+        minHeight: '100vh',
+        width: '100%'
+    },
+    main: {
+        flex: '1 0 auto',
+        minHeight: '400px',
+        width: '100%',
+        contain: 'layout' as const
+    }
+};
+
 export const Layout = () => {
     const [layoutRendered, setLayoutRendered] = useState<boolean>(false);
 
@@ -54,9 +70,9 @@ export const Layout = () => {
     }, [location.pathname]);
 
     return (
-        <div className="layout-container">
+        <div className="layout-container" style={layoutStyles.container}>
             {shouldShowHeaderFooter && <MemoizedHeader />}
-            <main>
+            <main style={layoutStyles.main}>
                 <Outlet />
             </main>
             {shouldShowHeaderFooter && <MemoizedFooter />}

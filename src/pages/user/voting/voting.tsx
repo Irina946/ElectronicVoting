@@ -41,8 +41,6 @@ export const Voting = (): JSX.Element => {
         getMeeting()
     }, [idMeeting]);
 
-    console.log(informations)
-
 
     const handleVoteChange = (agendaNumber: number, vote: string | { [candidate: number]: number | string }) => {
         setVotes(prev => ({ ...prev, [agendaNumber]: vote }));
@@ -68,7 +66,7 @@ export const Voting = (): JSX.Element => {
         setIsSave(true)
     }
 
-    const votesCount = informations ? informations?.vote_count.VoteDtls.VoteInstrForAgndRsltn[0].Quantity : 0
+    const votesCount = informations ? informations.vote_count.VoteDtls.VoteInstrForAgndRsltn[0].VoteInstr.Quantity : 0
 
     return (
         <>
@@ -130,7 +128,7 @@ export const Voting = (): JSX.Element => {
                         </div>
                         <TableHeader />
                         {informations.agenda.map((agenda: IAgenda, idx: number) => (
-                            <>
+                            <div key={agenda.question_id}>
                                 {agenda.details.length === 0 &&
                                     <RowVotingNotCandidates
                                         agenda={agenda}
@@ -143,7 +141,7 @@ export const Voting = (): JSX.Element => {
                                     <RowVotingCandidatesCumulative
                                         agenda={agenda}
                                         onVoteChange={handleVoteChange}
-                                        totalVotes={votesCount * agenda.seat_count}
+                                        totalVotes={agenda.seat_count * votesCount}
                                         key={agenda.question_id}
                                         numberQuestion={idx + 1}
                                     />
@@ -156,7 +154,7 @@ export const Voting = (): JSX.Element => {
                                         numberQuestion={idx + 1}
                                     />
                                 }
-                            </>
+                            </div>
                         ))}
                         <div className="flex items-center w-full justify-center mt-7 mb-3.5">
                             <ButtonMessageAdmin onClick={() => handleClickButtonResult()} title="Проголосовать" isSelected={false} />

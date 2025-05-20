@@ -99,10 +99,12 @@ export const RowVotingCandidates = (props: RowVotingProps): JSX.Element => {
                             </div>
                         </div>
                         <div>
-                            <button className="pt-3.5 cursor-pointer" onClick={() => toggleArrow(agenda.question_id)}>
+                            <button className="pt-3.5 cursor-pointer w-[21px]" onClick={() => toggleArrow(agenda.question_id)}>
                                 <img
                                     src={arrow} alt="Стрелка для открытия"
                                     className={arrowRotate[agenda.question_id] ? 'rotate-180' : ''}
+                                    width={21}
+                                    height={12}
                                 />
                             </button>
                         </div>

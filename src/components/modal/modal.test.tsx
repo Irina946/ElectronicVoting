@@ -11,11 +11,12 @@ describe('Modal Component', () => {
 
     it('renders nothing when visible is false', () => {
         const { container } = render(
-            <Modal visible={false} onClose={mockOnClose}>
-                {testContent}
+            <Modal visible={false} onClose={() => {}}>
+                Test Modal Content
             </Modal>
         );
-        expect(container.firstChild).toBeNull();
+        const modalOverlay = container.querySelector('[data-testid="modal-overlay"]');
+        expect(modalOverlay).toHaveClass('opacity-0', 'pointer-events-none');
     });
 
     it('renders content when visible is true', () => {

@@ -2,6 +2,12 @@ import { matchPath, useLocation, useNavigate, useParams } from "react-router";
 import headerTop from "../../assets/header1.svg"
 import headerCenter from "../../assets/header2.svg"
 
+// Определим константы для размеров изображений
+const HEADER_TOP_WIDTH = 1050;
+const HEADER_TOP_HEIGHT = 120;
+const HEADER_CENTER_WIDTH = 1440;
+const HEADER_CENTER_HEIGHT = 50;
+
 interface RouteConfig {
     path: string;
     text: string;
@@ -115,16 +121,38 @@ export const Header = () => {
     };
 
     return (
-        <div className="flex flex-col justify-center items-center">
-            <img src={headerTop} alt="Header" />
-            <div className="bg-(--color-red) w-[100%] flex justify-center">
-                <img src={headerCenter} alt="Header" />
+        <header className="flex flex-col justify-center items-center w-full">
+            {/* Первое изображение с явными размерами */}
+            <div className="w-full flex justify-between items-center" style={{ height: HEADER_TOP_HEIGHT }}>
+                <img 
+                    src={headerTop} 
+                    alt="Header logo" 
+                    width={HEADER_TOP_WIDTH} 
+                    height={HEADER_TOP_HEIGHT}
+                    className="flex-1"
+                    loading="eager" // Важно для приоритетной загрузки
+                />
             </div>
-            <div className="bg-(--color-gray) w-[100%] h-[50px] align-middle flex justify-center">
-                <div className="w-[1020px] text-base font-(--font-display) py-[15px] text-(--color-text)">
-                    <u>Главная</u> / <u>Услуги</u> / Сервис - Личный кабинет / {getBreadcrumbs()}
+
+            {/* Второе изображение с явными размерами */}
+            <div className="bg-(--color-red) w-full flex justify-center" style={{ height: HEADER_CENTER_HEIGHT }}>
+                <img 
+                    src={headerCenter} 
+                    alt="Header decoration" 
+                    width={HEADER_CENTER_WIDTH} 
+                    height={HEADER_CENTER_HEIGHT}
+                    loading="eager" // Важно для приоритетной загрузки
+                />
+            </div>
+
+            {/* Навигационный блок с фиксированной высотой */}
+            <div className="bg-(--color-gray) w-full" style={{ height: '50px' }}>
+                <div className="w-full h-full flex justify-center items-center">
+                    <div className="w-[1020px] text-base font-(--font-display) text-(--color-text)">
+                        <u>Главная</u> / <u>Услуги</u> / Сервис - Личный кабинет / {getBreadcrumbs()}
+                    </div>
                 </div>
             </div>
-        </div>
+        </header>
     );
 };

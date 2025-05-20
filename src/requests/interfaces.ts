@@ -62,9 +62,11 @@ export interface IMeeting {
 }
 
 interface IVoteInstrUser {
-    Quantity: number;
-    QuestionId: number;
-    DetailId?: number; // Это поле может быть необязательным, если оно не всегда присутствует
+    VoteInstr: {
+        Quantity: number;
+        QuestionId: number;
+        DetailId?: number;
+    };
 }
 
 interface IVoteDtls {

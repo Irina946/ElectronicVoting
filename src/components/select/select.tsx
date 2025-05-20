@@ -51,7 +51,7 @@ export const Select = (props: SelectProps) => {
                     font-(--font-display) 
                     placeholder-(--color-placeholder)
                     ${selectedOption ? 'text-(--color-text)' : 'text-(--color-placeholder)'} 
-                    
+                    cursor-pointer
                     inline-flex
                     justify-between
                     items-center
@@ -59,7 +59,10 @@ export const Select = (props: SelectProps) => {
                     `}
             >
                 {selectedOption ? selectedOption.label : placeholder}
-                {!isOpen ? <img src={arrow} /> : <img src={arrow} className="rotate-180" />}
+                <div className="w-[21px] h-[12px]">
+                    {!isOpen ? <img src={arrow} width={21} height={12} />
+                        : <img src={arrow} className="rotate-180" width={21} height={12} />}
+                </div>
             </button>
             {isOpen && (
                 <ul className="z-10 absolute w-[424px]">

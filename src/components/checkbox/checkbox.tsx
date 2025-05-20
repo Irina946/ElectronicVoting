@@ -30,7 +30,7 @@ export const Checkbox = (props: CheckboxProps): JSX.Element => {
                                 ${voting ? 'outline-[2px] outlene-black' : ''}
                                 `}>
                     {checked && (
-                        <img src={arrow} alt="Arrow" className="absolute inset-0 mt-[5px] ml-[4px] w-[20px] h-[18px] text-white"/>
+                        <img src={arrow} alt="Arrow" className="absolute inset-0 w-[20px] h-[18px] text-white" width={20} height={18}/>
                     )}
                 </div>
         </label>
