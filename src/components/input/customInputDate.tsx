@@ -20,9 +20,10 @@ const formatedDate = (value: string): string => {
     return `${day}.${month}.${year}`;
 }
 
-export const InputDate = (props: InputDateProps): JSX.Element => {
+export const CustomInputDate = (props: InputDateProps): JSX.Element => {
     const { value, onChange } = props;
     const holidays: Date[] = [
+        new Date("2025-01-01"), // 1 января
         new Date("2025-01-01"), // 1 января
         new Date("2025-01-02"), // 2 января
         new Date("2025-01-03"), // 3 января
@@ -178,6 +179,11 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
         handleNextMonth();
     }
 
+    const handleClear = () => {
+        onChange('');
+        setIsCalendarOpen(false);
+    }
+
     const renderDays = () => {
         if (!currentDate) return [];
         
@@ -237,7 +243,7 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
                     className="w-[28px] 
                             h-[28px] 
                             py-[7px] 
-                            text-center 
+                            text-base 
                             text-[14px] 
                             leading-[14px] 
                             text-(--color-calendar-prew) 
@@ -256,45 +262,65 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
 
     return (
         <div className="relative">
-            <input
-                type="text"
-                value={formatedDate(value)}
-                readOnly
-                onFocus={() => setIsCalendarOpen(true)}
-                className="block
-                        w-[128px]
-                        h-[28px]
-                        px-[7px]
-                        py-[5px]
-                        text-sm
-                        font-(--font-display)
-                        text-(--color-text)
-                        cursor-pointer
-                        bg-(--color-white)
-                        rounded-[1px]
-                        "
-                placeholder="ДД.ММ.ГГГГ"
-            />
-            <div className="absolute left-[103px] top-[5px] cursor-pointer w-[16px] h-[16px]">
-                <img
-                    src={calendar}
-                    alt="Calendar"
-                    className="absolute cursor-pointer "
-                    onClick={() => setIsCalendarOpen(true)}
+            <div className="flex items-center">
+                <input
+                    type="text"
+                    value={formatedDate(value)}
+                    readOnly
+                    onFocus={() => setIsCalendarOpen(true)}
+                    className="block
+                            w-[160px]
+                            h-[30px]
+                            p-2
+                            text-sm
+                            font-(--font-display)
+                            text-(--color-text)
+                            cursor-pointer
+                            bg-(--color-white)
+                            rounded-[1px]
+                            border-(--color-border)
+                            mr-[18px]
+                            "
+                    placeholder="ДД.ММ.ГГГГ"
                 />
+                <div className="flex items-center absolute right-1 top-1/2 -translate-y-1/2">
+                    {value && (
+                        <button
+                            onClick={handleClear}
+                            className="p-1 hover:bg-(--color-yellow-hover) rounded"
+                            title="Очистить дату"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setIsCalendarOpen(true)}
+                        className="p-1 hover:bg-(--color-yellow-hover) rounded"
+                        title="Выбрать дату"
+                    >
+                        <img
+                            src={calendar}
+                            alt="Calendar"
+                            className="w-4 h-4"
+                        />
+                    </button>
+                </div>
             </div>
 
             {isCalendarOpen && (
                 <div ref={calendarRef}
                     className="absolute 
                             bottom-full 
-                            left-[100px] 
+                            left-0 
                             z-15 
                             bg-white 
                             border-[0.5px] 
                             border-(--color-border) 
                             rounded-[16px] 
                             w-[244px]
+                            mb-2
                             ">
                     <div className="flex items-center justify-between p-[14px] ">
                         <span className="text-(--color-text) text-sm font-bold capitalize">
@@ -323,4 +349,4 @@ export const InputDate = (props: InputDateProps): JSX.Element => {
             )}
         </div>
     )
-}
+} 

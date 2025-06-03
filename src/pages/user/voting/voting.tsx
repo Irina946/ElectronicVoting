@@ -83,10 +83,11 @@ export const Voting = (): JSX.Element => {
                     <div className="text-red-500 text-xl">Произошла ошибка при загрузке данных</div>
                 </div>
             ) : (
-                <div className="w-[1016px] m-auto">
+                <div className="w-[1016px] m-auto mb-[80px]">
                     <h1 className="text-[32px] text-(--color-text) my-7">
                         Голосование
                     </h1>
+                    <Button title="Назад" color="empty" onClick={() => navigate(-1)} />
                     <div className="
                             w-full
                             py-3.5
@@ -97,6 +98,7 @@ export const Voting = (): JSX.Element => {
                             rounded-2xl
                             text-sm
                             text-(--color-text)
+                            mt-7
                             ">
                         <p className="font-bold text-center">
                             {informations?.annual_or_unscheduled

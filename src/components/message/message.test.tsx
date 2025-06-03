@@ -15,6 +15,7 @@ const mockData: IMail = {
         short_name: 'АО Компания'
     },
     meeting_date: '2024-01-01',
+    deadline_date: '2027-12-31',
     status: 1,
     is_draft: true,
     first_or_repeated: true,
@@ -48,6 +49,7 @@ describe('Message Component', () => {
                 type="outgoing"
                 data={mockData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -63,6 +65,7 @@ describe('Message Component', () => {
                 type="drafts"
                 data={mockData}
                 refreshMessages={mockRefreshMessages}
+                status={0}
             />
         );
 
@@ -78,6 +81,7 @@ describe('Message Component', () => {
                 type="outgoing"
                 data={mockData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -97,6 +101,7 @@ describe('Message Component', () => {
                 type="drafts"
                 data={mockData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -146,6 +151,7 @@ describe('Message Component', () => {
                 type="drafts"
                 data={mockData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -201,6 +207,7 @@ describe('Message Component', () => {
                 type="drafts"
                 data={mockData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -239,6 +246,7 @@ describe('Message Component', () => {
                 type="outgoing"
                 data={longTextData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -261,6 +269,7 @@ describe('Message Component', () => {
                 type="drafts"
                 data={longTextData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -281,6 +290,7 @@ describe('Message Component', () => {
                 type="outgoing"
                 data={repeatedData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 
@@ -299,6 +309,7 @@ describe('Message Component', () => {
                 type="outgoing"
                 data={unscheduledData}
                 refreshMessages={mockRefreshMessages}
+                status={mockData.status}
             />
         );
 

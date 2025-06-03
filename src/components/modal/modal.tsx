@@ -26,27 +26,34 @@ export const Modal = (props: IModalProps) => {
     useEffect(() => {
         document.addEventListener('keydown', onKeydown);
         
-        // Предотвращаем прокрутку body при открытом модальном окне
+        // При открытии модального окна
         if (visible) {
+            // Прокручиваем страницу в самый верх
+            window.scrollTo(0, 0);
+            // Запрещаем прокрутку body
             document.body.style.overflow = 'hidden';
+        } else {
+             // Восстанавливаем прокрутку при закрытии
+            document.body.style.overflow = '';
         }
         
+        // Очистка при размонтировании
         return () => {
             document.removeEventListener('keydown', onKeydown);
-            // Восстанавливаем прокрутку при размонтировании
-            document.body.style.overflow = '';
+            document.body.style.overflow = ''; // Убедиться, что overflow сброшен при unmount
         };
-    }, [onKeydown, visible]);
+    }, [onKeydown, visible]); // Добавляем visible в зависимости для реакции на его изменение
 
     // Используем классы для управления видимостью вместо условного рендеринга
     const modalClasses = [
         'fixed',
         'w-full',
-        'h-full',
+        'h-screen',
         'bg-[#303030BF]',
         'top-0',
         'left-0',
         'z-[9999]',
+        'mt-[-220px]',
         'flex',
         'justify-center',
         'items-center',
@@ -64,7 +71,7 @@ export const Modal = (props: IModalProps) => {
         'overflow-y-auto',
         'transition-transform',
         'duration-300',
-        visible ? 'translate-y-0' : 'translate-y-8',
+        visible ? 'translate-y-0' : 'translate-y-8', // Анимация появления снизу
         type === 'message' ? 'w-[811px] bg-(--color-button-active)' : 'w-[577px] bg-white'
     ].join(' ');
 

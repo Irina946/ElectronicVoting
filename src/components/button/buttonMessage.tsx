@@ -18,8 +18,8 @@ export const ButtonMessage = (props: ButtonMessageProps): JSX.Element => {
             disabled={isSelected}
             className={`
                     font-(--font-display)
-                    w-[155px] 
-                    h-[25px]
+                    w-[170px] 
+                    h-[30px]
                     ${color === "empty"
                     ? styles.buttonEmptyMessage
                     : styles.buttonYellow} 

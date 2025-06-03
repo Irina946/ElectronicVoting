@@ -56,7 +56,7 @@ export const MessagePageAdmin = (): JSX.Element => {
                 <>
                     <div className="mb-7 flex gap-7">
                         <ButtonMessageAdmin
-                            title="Все собрания"
+                            title="Назад к собраниям"
                             onClick={() => handleClickMessages()}
                             isSelected={false}
                         />
@@ -71,7 +71,7 @@ export const MessagePageAdmin = (): JSX.Element => {
                             isSelected={currentType === 'participants'}
                         />
                         <ButtonMessageAdmin
-                            title="Результаты"
+                            title="Общие результаты"
                             onClick={() => handleButtonClick('results')}
                             isSelected={currentType === 'results'}
                         />

@@ -72,9 +72,10 @@ export const Authorization = (): JSX.Element => {
                 value={number}
                 onChange={(value) => { setNumber(value) }}
                 type="text"
-                label="Номер Телефона или Логин:"
+                label="Номер телефона или логин:"
                 error={numberError}
                 fieldType="login"
+                placeholder="+79999999999"
             />
             <div className="flex flex-col items-start">
                 <InputAuthorization

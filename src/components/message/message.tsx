@@ -11,7 +11,19 @@ interface MessageProps {
     type: "outgoing" | "drafts";
     data: IMail;
     refreshMessages: () => void;
+    status: number;
 }
+
+export const formatDateText = (dateString: string): string => {
+    if (dateString === '') return ''
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    };
+    return new Intl.DateTimeFormat('ru-RU', options).format(date);
+};
 
 export const formatedDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
@@ -26,17 +38,17 @@ const formatedDateBack = (date: string | null): string => {
 }
 
 export const formatedText = (text: string, type: "outgoing" | "drafts" | "shareholder"): string => {
-    const maxLength = type === 'drafts' ? 76 : type === 'shareholder' ? 85 : 91;
-    
+    const maxLength = type === 'drafts' ? 80 : type === 'shareholder' ? 103 : 103;
+
     if (text.length <= maxLength) {
         return `«${text}»`;
     }
-    
+
     return `«${text.substring(0, maxLength)}...»`;
 };
 
 export const Message = (props: MessageProps): JSX.Element => {
-    const { onClick, data, type } = props;
+    const { onClick, data, type, status } = props;
     const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false);
     const [alertMessage, setAlertMessage] = useState<string>("");
 
@@ -49,8 +61,8 @@ export const Message = (props: MessageProps): JSX.Element => {
         }
     }, [isOpenAlert]);
 
-    const nameCompany = data.issuer.short_name.startsWith('АО') 
-        ? data.issuer.short_name.slice(3) 
+    const nameCompany = data.issuer.short_name.startsWith('АО')
+        ? data.issuer.short_name.slice(3)
         : data.issuer.short_name;
 
     const handleClick = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -59,7 +71,9 @@ export const Message = (props: MessageProps): JSX.Element => {
             await putMeeting(data.meeting_id);
             setAlertMessage("Сообщение успешно отправлено");
             setIsOpenAlert(true);
-            props.refreshMessages();
+            setTimeout(() => {
+                props.refreshMessages();
+            }, 3000);
         } catch (error) {
             if (error instanceof AxiosError) {
                 if (error.response?.data?.error?.includes('не заполнены обязательные поля')) {
@@ -89,13 +103,14 @@ export const Message = (props: MessageProps): JSX.Element => {
         >
             {type === "outgoing" && (
                 <div className="text-(--color-text) text-[13px] font-bold">
-                    {formatedDateBack(data.sent_at)}
+                    {formatedDateBack(data.sent_at)} {status === 5
+                        ? <span className="text-green-500">✔</span> : <></>}
                 </div>
             )}
             <div className={`
                 flex 
                 items-center 
-                ${type === 'drafts' ? 'ml-[7px]' : 'ml-[28px]'}
+                ${type === 'drafts' ? 'ml-[7px]' : 'ml-[5px]'}
             `}>
                 <div className="flex justify-between w-full pr-[14px] items-center mt-[10px]">
                     <div className="mb-[10px]">
@@ -104,7 +119,7 @@ export const Message = (props: MessageProps): JSX.Element => {
                                 ? 'Годового'
                                 : 'Внеочередного'} ${data.first_or_repeated
                                     ? ''
-                                    : 'повторного'} Общего собрания Акционерного общества ${nameCompany}`,
+                                    : 'повторного'} Общего собрания Акционерного общества ${nameCompany} ${formatDateText(data.meeting_date)}`,
                             type
                         )}
                     </div>
@@ -119,10 +134,10 @@ export const Message = (props: MessageProps): JSX.Element => {
                 </div>
             </div>
             {isOpenAlert && (
-                <Alert 
-                    message={alertMessage} 
-                    onClose={() => setIsOpenAlert(false)} 
-                    data-testid="alert-message" 
+                <Alert
+                    message={alertMessage}
+                    onClose={() => setIsOpenAlert(false)}
+                    data-testid="alert-message"
                 />
             )}
         </div>

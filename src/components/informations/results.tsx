@@ -7,6 +7,7 @@ import { RowResultNotCandidates } from "../rowResult/rowResultNotCandidates";
 import { RowResultCandidates } from "../rowResult/rowResultCandidates";
 import { convertToQuestionWithVote } from "../../utils/functions";
 import { generateExcelFile } from "../../utils/excelGenerator";
+import iconExport from "../../assets/get_app.svg";
 
 
 interface IResultChecked {
@@ -97,10 +98,16 @@ export const Results = (props: ResultsProps): JSX.Element => {
                                     font-bold
                                     text-base
                                     border-(--color-border)
-                                    bg-(--color-button)
+                                    bg-(--color-white)
                                     mb-7
+                                    hover:bg-(--color-button-two)
+                                    flex
+                                    items-center
+                                    justify-center
+                                    gap-2
                                     `}>
                         Скачать результаты
+                        <img src={iconExport} title="Скачать список собраний" className=" !w-[25px] !h-[25px]" />
                     </button>
                     <div className="
                                             w-full

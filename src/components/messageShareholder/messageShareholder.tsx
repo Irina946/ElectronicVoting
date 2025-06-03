@@ -1,5 +1,5 @@
 import { JSX } from "react"
-import { formatedText } from "../message/message"
+import { formatDateText, formatedText } from "../message/message"
 import { IMail } from "../../requests/interfaces"
 
 
@@ -27,20 +27,20 @@ export const MessageShareholder = (props: IMessageShareholderProps): JSX.Element
             flex
             items-center
             text-sm
-            gap-[90px]
+            gap-[20px]
             `}>
             <div className="flex items-center ">
                 <div className={`mr-3.5 rounded-full w-9 h-9`}
                     style={{ backgroundColor: message.created_by?.avatar || 'red' }}></div>
-                <div className="w-[175px]">{message.created_by?.email}</div>
+                <div className="w-[130px]">{message.created_by?.email}</div>
 
             </div>
-            <div>
+            <div className="w-[900px]">
                 {formatedText(`Сообщение о проведении ${message.annual_or_unscheduled
                     ? 'Годового'
                     : 'Внеочередного'} ${message.first_or_repeated
                         ? ''
-                        : 'повторного'} Общего собрания Акционерного общества ${nameCompany}`, 'shareholder')}
+                        : 'повторного'} Общего собрания Акционерного общества ${nameCompany} ${formatDateText(message.meeting_date)}`, 'shareholder') }
             </div>
 
         </div>

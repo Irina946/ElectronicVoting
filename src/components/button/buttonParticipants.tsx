@@ -1,4 +1,5 @@
 import { JSX } from "react";
+import iconExport from "../../assets/get_app.svg";
 
 interface ButtonParticipantsProps {
     title: string;
@@ -13,8 +14,6 @@ export const ButtonParticipants = (props: ButtonParticipantsProps): JSX.Element 
         <button
             onClick={onClick}
             className={`
-                    w-[160px] 
-                    h-[30px]
                     text-(--color-black)
                     rounded-2xl
                     cursor-pointer
@@ -22,12 +21,15 @@ export const ButtonParticipants = (props: ButtonParticipantsProps): JSX.Element 
                     text-sm
                     border-(--color-border)
                     ${color === 'yellow'
-                    ? "bg-(--color-yellow-button) hover:bg-(--color-yellow) focus:bg-(--color-yellow) active:bg-(--color-yellow)"
-                    : "bg-(--color-button) hover:bg-(--color-button-two) focus:bg-(--color-button-two) active:bg-(--color-button-two)"
+                    ? "w-[160px] h-[30px] bg-(--color-yellow-button) hover:bg-(--color-yellow) focus:bg-(--color-yellow) active:bg-(--color-yellow)"
+                    : "h-[40px] w-[220px] border-[2px] bg-(--color-white) hover:bg-(--color-button-two) focus:bg-(--color-button-two) active:bg-(--color-button-two) flex items-center justify-center gap-2"
                 }
                     border-[1px]
                     `}>
             {title}
+            {color === 'gray' && (
+                <img src={iconExport} title="Скачать список собраний" className="!w-[20px] !h-[20px]" />
+            )}
         </button>
     )
 }

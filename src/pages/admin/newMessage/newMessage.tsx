@@ -38,6 +38,7 @@ export const NewMessage = (): JSX.Element => {
     const [isOpenModal, setIsOpenModal] = useState(false);
     const [checked, setChecked] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+    const [isOpenSaveModal, setIsOpenSaveModal] = useState(false);
 
     const validateForm = (): boolean => {
         if (!formState.selectedIssuer) {
@@ -62,6 +63,9 @@ export const NewMessage = (): JSX.Element => {
             setErrorMessage("Ошибка при сохранении сообщения");
             console.error("Ошибка при сохранении:", error);
         }
+        
+        localStorage.setItem('messageType', 'drafts')
+        navigate('/admin');
     };
 
     const handleExit = () => {
@@ -280,7 +284,7 @@ export const NewMessage = (): JSX.Element => {
                 <InputFile onFileSelected={(e) => updateState('files', [...(formState.files || []), e] as File[])} />
                 <div className="flex justify-center items-center mt-7 gap-[275px]">
                     <Button title="Выйти без сохранения" onClick={() => setIsOpenModal(true)} color="empty" />
-                    <Button title="Сохранить сообщение" onClick={handleSave} color="yellow" />
+                    <Button title="Сохранить сообщение" onClick={() => setIsOpenSaveModal(true)} color="yellow" />
                 </div>
             </div>
             {isOpenModal && <Modal onClose={() => setIsOpenModal(false)} visible={isOpenModal} type="warning">
@@ -288,8 +292,18 @@ export const NewMessage = (): JSX.Element => {
                     <p className="mb-[7px]">Вы уверены, что хотите выйти из раздела создания сообщения?</p>
                     <p>Все не сохранённые данные удалятся!</p>
                     <div className="mt-14 flex gap-16">
-                        <Button title="Продолжить" onClick={() => setIsOpenModal(false)} color="empty" />
+                        <Button title="Вернуться" onClick={() => setIsOpenModal(false)} color="empty" />
                         <Button title="Выйти без сохранения" onClick={handleExit} color="empty" />
+                    </div>
+                </div>
+
+            </Modal>}
+            {isOpenSaveModal && <Modal onClose={() => setIsOpenSaveModal(false)} visible={isOpenSaveModal} type="warning">
+                <div className="flex items-center flex-col text-(--color-text) text-lg">
+                    <p className="mb-[7px]">Для отправки сообщения необходимо перейти в раздел "Черновики".</p>
+                    <div className="mt-14 flex gap-16">
+                        <Button title="Вернуться" onClick={() => setIsOpenSaveModal(false)} color="empty" />
+                        <Button title="Сохранить" onClick={handleSave} color="yellow" />
                     </div>
                 </div>
 

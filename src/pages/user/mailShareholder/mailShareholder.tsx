@@ -24,10 +24,12 @@ export const MailShareholder = (): JSX.Element => {
         navigate(`/user/meeting/${id}`, { state: { id } });
     }
 
+    
+
     return (
         <div className="w-[1016px] m-auto">
             <h1 className="text-[32px] text-(--color-text) my-7">
-                Общее собрание акционеров
+                Список собраний
             </h1>
 
             <div className="

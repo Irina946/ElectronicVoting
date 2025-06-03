@@ -16,13 +16,16 @@ export const ButtonAccounts: React.FC<ButtonAccountsProps> = ({ fullName, onClic
             hover:border-(--color-button)
             focus:border-black
             active:border-(--color-button-two)
+            hover:bg-(--color-button)
+            focus:bg-(--color-button)
+            active:bg-(--color-button-two)
             transition 
             ease-in-out 
             duration-150
             w-[250px]
             text-left
         "
-        onClick={onClick}
+            onClick={onClick}
         >
             {fullName}
         </button>

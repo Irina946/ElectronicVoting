@@ -10,6 +10,7 @@ import { AxiosError } from "axios";
 import { MeetingInfo } from "../../../components/meetingInfo/meetingInfo";
 import { getNameCompany } from "../../../utils/functions";
 import MeetingActions from "../../../components/meetingInfo/meetingButton";
+import { Button } from "../../../components/button/button";
 
 export const Message = (): JSX.Element => {
     const [isRegister, setIsRegister] = useState(false);
@@ -113,27 +114,56 @@ export const Message = (): JSX.Element => {
             <h1 className="text-[32px] text-(--color-text) my-7">
                 Сообщение о проведении собрания
             </h1>
-            {informationMeeting === undefined ? (<div className="flex justify-center items-center m-auto">
+            <Button title="Назад" color="empty" onClick={() => navigate(-1)} />
+            {informationMeeting === undefined ? (<div className="flex justify-center items-center m-auto mt-[20px]">
                 <div className="loader"></div>
             </div>) : <>
                 <MeetingActions
                     status={informationMeeting.status}
                     isRegister={isRegister}
                     onRegisterClick={handleClickRegister}
-                    onVotingClick={handleClickModalOpen}
-                    onBroadcastClick={handleClickBroadcast}
-                    onResultsClick={handleClickModalOpen}
-                    onRecordingClick={() => { }}
-                    meetingURL={informationMeeting.meeting_url}
-                    earlyRegistration={informationMeeting.early_registration}
                 />
                 <MeetingInfo informationMeeting={informationMeeting} nameCompany={getNameCompany(informationMeeting.issuer.short_name || '')} />
+                <div className="flex justify-end gap-7 mb-7 text-sm">
+                    {informationMeeting.status === 1 && (
+                        <>
+                            <Button title="Проголосовать" color="yellow" onClick={handleClickModalOpen} disabled={true} />
+                            <Button title="Трансляция собрания" color="yellow" onClick={handleClickBroadcast} disabled={true} />
+                        </>
+                    )}
+                    {(informationMeeting.status === 2 || informationMeeting.status === 3) && (
+                        <>
+                            <Button
+                                title="Проголосовать"
+                                color="yellow"
+                                onClick={handleClickModalOpen}
+                                disabled={!isRegister}
+                            />
+                            <Button
+                                title="Трансляция собрания"
+                                color="yellow"
+                                onClick={handleClickBroadcast}
+                                disabled={!isRegister || informationMeeting.meeting_url !== null}
+                            />
+                        </>
+                    )}
+                    {informationMeeting.status === 4 && (
+                        <>
+                            <Button title="Результаты" color="yellow" onClick={handleClickModalOpen} disabled={true} />
+                            <Button title="Запись собрания" color="yellow" onClick={() => {}} disabled={true} />
+                        </>
+                    )}
+                    {informationMeeting.status === 5 && (
+                        <>
+                            <Button title="Результаты" color="yellow" onClick={handleClickModalOpen} disabled={false} />
+                            <Button title="Запись собрания" color="yellow" onClick={() => {}} disabled={informationMeeting.meeting_url === null} />
+                        </>
+                    )}
+                </div>
             </>}
             {isOpenAlert &&
                 <Alert
-                    message={errorRegister !== 'Регистрация не разрешена'
-                        ? 'Регистрация уже окончена'
-                        : "Регистрация пройдена"}
+                    message={errorRegister === '' ? "Регистрация пройдена" : 'Ошибка регистрации'}
                     onClose={handleCloseAlert}
                 />
             }

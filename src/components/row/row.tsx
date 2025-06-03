@@ -136,7 +136,7 @@ export const Row = (props: IRowProps) => {
                     {
                         agenda === null
                             ? <button
-                                className="cursor-pointer"
+                                className="cursor-pointer h-[15px]"
                                 data-testid="plus-button"
                                 onClick={handleClickPlus}
                             >
@@ -173,7 +173,7 @@ export const Row = (props: IRowProps) => {
                     {agenda?.decision}
                 </div>
                 <div className="outline-[0.5px] px-[10px] py-[7px] flex items-center justify-center">
-                    {agenda?.cumulative ? <img src={ok} /> : ''}
+                    {agenda?.cumulative ? <img src={ok} className="!w-[30px] !h-[30px]"/> : ''}
                 </div>
             </div>
             {isOpenModal && (

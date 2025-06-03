@@ -6,6 +6,7 @@ export interface IMail {
         short_name: string
     },
     meeting_date: string,
+    deadline_date: "2027-12-31"
     status: number,
     is_draft: boolean,
     first_or_repeated: boolean,
