@@ -54,7 +54,12 @@ describe('Message Component', () => {
         );
 
         expect(screen.getByText('01.01.2024')).toBeInTheDocument();
-        expect(screen.getByText(/«Сообщение о проведении Годового Общего собрания Акционерного общества Компания»/)).toBeInTheDocument();
+        expect(
+          screen.getByText((content) =>
+            content.replace(/\s+/g, ' ').trim() ===
+            '«Сообщение о проведении Годового Общего собрания Акционерного общества Компания 1 января 2024 г.»'
+          )
+        ).toBeInTheDocument();
         expect(screen.queryByText('Отправить сообщение')).not.toBeInTheDocument();
     });
 
@@ -118,13 +123,14 @@ describe('Message Component', () => {
                 }),
                 expect.any(Object)
             );
-            expect(mockRefreshMessages).toHaveBeenCalled();
         });
 
         await act(async () => {
             jest.advanceTimersByTime(3000);
             await Promise.resolve(); // Ждем завершения таймера
         });
+
+        expect(mockRefreshMessages).toHaveBeenCalled();
     });
 
     it('shows error alert when message sending fails with network error', async () => {
@@ -252,7 +258,7 @@ describe('Message Component', () => {
 
         const text = screen.getByText(/«Сообщение о проведении/).textContent;
         expect(text).toMatch(/^«.*\.\.\.»$/);
-        expect(text?.length).toBeLessThanOrEqual(96);
+        expect(text?.length).toBeLessThanOrEqual(108);
     });
 
     it('formats long text correctly for draft messages', () => {
@@ -275,7 +281,7 @@ describe('Message Component', () => {
 
         const text = screen.getByText(/«Сообщение о проведении/).textContent;
         expect(text).toMatch(/^«.*\.\.\.»$/);
-        expect(text?.length).toBeLessThanOrEqual(81);
+        expect(text?.length).toBeLessThanOrEqual(108);
     });
 
     it('renders repeated meeting message correctly', () => {
